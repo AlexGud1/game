@@ -87,6 +87,14 @@ function IntroScene() {
 // СЦЕНА 2: КОМНАТА АСТРЫ (Стиль Hello Charlotte)
 // ==========================================
 function OfficeScene() {
+    // Загрузка спрайтов персонажа
+    this.preload = function () {
+        this.load.image('astra_down', 'images/astra_down.png');
+        this.load.image('astra_up', 'images/astra_up.png');
+        this.load.image('astra_left', 'images/astra_left.png');
+        this.load.image('astra_right', 'images/astra_right.png');
+    };
+
     this.create = function () {
         const BLOCK = 64;
         
@@ -111,12 +119,6 @@ function OfficeScene() {
         floorGfx.lineStyle(1, 0x2a2a2a);
         floorGfx.strokeRect(0, 0, BLOCK, BLOCK);
         floorGfx.generateTexture('floor', BLOCK, BLOCK);
-
-        // Стена (просто черный квадрат)
-        const wallGfx = this.make.graphics({ x: 0, y: 0, add: false });
-        wallGfx.fillStyle(0x000000);
-        wallGfx.fillRect(0, 0, BLOCK, BLOCK);
-        wallGfx.generateTexture('wall', BLOCK, BLOCK);
 
         // Кровать (2x3 блока)
         const bedGfx = this.make.graphics({ x: 0, y: 0, add: false });
@@ -182,27 +184,20 @@ function OfficeScene() {
             }
         }
 
-        // Обводка комнаты (тонкая фиолетовая линия поверх сетки)
+        // Обводка комнаты
         const roomBorder = this.add.graphics();
         roomBorder.lineStyle(2, 0x4B0082, 1);
         roomBorder.strokeRect(ROOM_X, ROOM_Y, ROOM_WIDTH, ROOM_HEIGHT);
 
-        // Коридор (выступ слева, 1 блок)
+        // Коридор (выступ слева, ровно 1 блок)
         const corridorX = ROOM_X - BLOCK;
-        const corridorY = ROOM_Y + 3 * BLOCK;
-        // Пол коридора
+        const corridorY = ROOM_Y + 3 * BLOCK; // На уровне 3-й строки
+        // Пол коридора (1 клетка)
         this.add.image(corridorX + BLOCK/2, corridorY + BLOCK/2, 'floor');
-        this.add.image(corridorX + BLOCK/2, corridorY + BLOCK*1.5, 'floor');
         // Обводка коридора
         const corridorBorder = this.add.graphics();
         corridorBorder.lineStyle(2, 0x4B0082, 1);
-        corridorBorder.beginPath();
-        corridorBorder.moveTo(corridorX, corridorY);
-        corridorBorder.lineTo(corridorX, corridorY + BLOCK * 2);
-        corridorBorder.lineTo(corridorX + BLOCK, corridorY + BLOCK * 2);
-        corridorBorder.moveTo(corridorX, corridorY);
-        corridorBorder.lineTo(corridorX + BLOCK, corridorY);
-        corridorBorder.strokePath();
+        corridorBorder.strokeRect(corridorX, corridorY, BLOCK, BLOCK);
 
         // ==========================================
         // 3. МЕБЕЛЬ И ОБЪЕКТЫ
@@ -244,40 +239,47 @@ function OfficeScene() {
         // Левая стена (нижняя часть)
         walls.create(ROOM_X, ROOM_Y + 5.5 * BLOCK, null).setSize(20, BLOCK * 3).setVisible(false);
         
-        // Коридор: стены (верх и низ)
+        // Коридор: стены (верх и низ) - ровно 1 блок
         walls.create(corridorX + BLOCK/2, corridorY, null).setSize(BLOCK, 20).setVisible(false); // Верх
-        walls.create(corridorX + BLOCK/2, corridorY + BLOCK * 2, null).setSize(BLOCK, 20).setVisible(false); // Низ
+        walls.create(corridorX + BLOCK/2, corridorY + BLOCK, null).setSize(BLOCK, 20).setVisible(false); // Низ
         // Коридор: левая стена (тупик)
-        walls.create(corridorX, corridorY + BLOCK, null).setSize(20, BLOCK * 2).setVisible(false);
+        walls.create(corridorX, corridorY + BLOCK/2, null).setSize(20, BLOCK).setVisible(false);
 
         // ==========================================
-        // 5. ИГРОК (АСТРА)
+        // 5. ИГРОК (АСТРА С АНИМАЦИЕЙ)
         // ==========================================
 
-        // Временный спрайт (пока не нарисуешь свой)
-        const astraGfx = this.make.graphics({ x: 0, y: 0, add: false });
-        astraGfx.fillStyle(0x1a1a2e); 
-        astraGfx.fillRect(16, 32, 32, 32); 
-        astraGfx.fillStyle(0xe0e0e0);
-        astraGfx.fillRect(8, 40, 8, 16);
-        astraGfx.fillRect(48, 40, 8, 16);
-        astraGfx.fillStyle(0xe0e0e0); 
-        astraGfx.fillRect(20, 16, 24, 20); 
-        astraGfx.fillStyle(0x000000); 
-        astraGfx.fillRect(16, 12, 32, 12); 
-        astraGfx.fillStyle(0xffffff); 
-        astraGfx.fillRect(12, 4, 40, 12); 
-        astraGfx.fillStyle(0x000000); 
-        astraGfx.fillRect(8, 16, 48, 6); 
-        astraGfx.fillStyle(0x0000ff); 
-        astraGfx.fillRect(28, 8, 8, 8); 
-        astraGfx.fillStyle(0x0000ff); 
-        astraGfx.fillRect(24, 24, 4, 4); 
-        astraGfx.fillRect(36, 24, 4, 4); 
-        astraGfx.generateTexture('astra_sprite', 64, 64);
+        // Создаём анимации на основе загруженных спрайтов
+        if (!this.anims.exists('walk_down')) {
+            this.anims.create({
+                key: 'walk_down',
+                frames: [{ key: 'astra_down' }],
+                frameRate: 10,
+                repeat: -1
+            });
+            this.anims.create({
+                key: 'walk_up',
+                frames: [{ key: 'astra_up' }],
+                frameRate: 10,
+                repeat: -1
+            });
+            this.anims.create({
+                key: 'walk_left',
+                frames: [{ key: 'astra_left' }],
+                frameRate: 10,
+                repeat: -1
+            });
+            this.anims.create({
+                key: 'walk_right',
+                frames: [{ key: 'astra_right' }],
+                frameRate: 10,
+                repeat: -1
+            });
+        }
 
-        // Спавн Астры в центре комнаты
-        const player = this.add.sprite(ROOM_X + 4.5 * BLOCK, ROOM_Y + 4 * BLOCK, 'astra_sprite');
+        // Создаём игрока
+        const player = this.add.sprite(ROOM_X + 4.5 * BLOCK, ROOM_Y + 4 * BLOCK, 'astra_down');
+        player.setScale(1); // Размер как в картинке (если надо больше, поставь 1.5)
         this.physics.add.existing(player);
         player.body.setCollideWorldBounds(true);
         player.body.setSize(32, 48); // Хитбокс
@@ -293,7 +295,7 @@ function OfficeScene() {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys('W,A,S,D,E');
 
-        // Камера: центрируем на комнате
+        // Камера
         this.cameras.main.setZoom(1);
         this.cameras.main.centerOn(ROOM_X + ROOM_WIDTH/2, ROOM_Y + ROOM_HEIGHT/2);
 
@@ -302,20 +304,37 @@ function OfficeScene() {
     };
 
     this.update = function () {
-        const speed = 200;
+        const speed = 350; // Увеличена скорость!
 
+        // Сброс анимации, если стоим
+        if (
+            !this.cursors.left.isDown && !this.keys.A.isDown &&
+            !this.cursors.right.isDown && !this.keys.D.isDown &&
+            !this.cursors.up.isDown && !this.keys.W.isDown &&
+            !this.cursors.down.isDown && !this.keys.S.isDown
+        ) {
+            this.player.anims.stop();
+            // Возвращаем кадр "вниз" по умолчанию (или можно оставить последний)
+            this.player.setTexture('astra_down');
+        }
+
+        // Движение и анимация
         if (this.cursors.left.isDown || this.keys.A.isDown) {
             this.player.body.setVelocityX(-speed);
+            this.player.anims.play('walk_left', true);
         } else if (this.cursors.right.isDown || this.keys.D.isDown) {
             this.player.body.setVelocityX(speed);
+            this.player.anims.play('walk_right', true);
         } else {
             this.player.body.setVelocityX(0);
         }
 
         if (this.cursors.up.isDown || this.keys.W.isDown) {
             this.player.body.setVelocityY(-speed);
+            this.player.anims.play('walk_up', true);
         } else if (this.cursors.down.isDown || this.keys.S.isDown) {
             this.player.body.setVelocityY(speed);
+            this.player.anims.play('walk_down', true);
         } else {
             this.player.body.setVelocityY(0);
         }
