@@ -279,7 +279,7 @@ function OfficeScene() {
 
         // Создаём игрока
         const player = this.add.sprite(ROOM_X + 4.5 * BLOCK, ROOM_Y + 4 * BLOCK, 'astra_down');
-        player.setScale(1); // Размер как в картинке (если надо больше, поставь 1.5)
+        player.setScale(1.5); // Размер как в картинке (если надо больше, поставь 1.5)
         this.physics.add.existing(player);
         player.body.setCollideWorldBounds(true);
         player.body.setSize(32, 48); // Хитбокс
