@@ -4,7 +4,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     pixelArt: true,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#000000', // Черный фон, как на референсе
     physics: {
         default: 'arcade',
         arcade: { gravity: { y: 0 }, debug: false }
@@ -19,162 +19,146 @@ const config = {
 const game = new Phaser.Game(config);
 
 function preload() {
-    // Ничего не загружаем
+    // Ничего не загружаем, всё рисуем кодом
 }
 
 function create() {
     // ==========================================
-    // 1. ГЕНЕРАЦИЯ ТЕКСТУР
+    // 1. ГЕНЕРАЦИЯ ТЕКСТУР (БЕЛЫЕ КОНТУРЫ)
     // ==========================================
     
-    // --- Пол ---
-    const floorGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    floorGfx.fillStyle(0x151515);
-    floorGfx.fillRect(0, 0, 32, 32);
-    floorGfx.lineStyle(1, 0x0a0a0a);
-    floorGfx.lineBetween(0, 16, 32, 16);
-    floorGfx.generateTexture('floor', 32, 32);
+    // Вспомогательная функция для рисования контуров
+    const drawOutline = (gfx, x, y, w, h) => {
+        gfx.lineStyle(2, 0xffffff, 1); // Белая линия толщиной 2
+        gfx.strokeRect(x, y, w, h);
+    };
 
-    // --- Текстура стены (просто тёмный прямоугольник) ---
-    const wallGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    wallGfx.fillStyle(0x0a0a0a); // Почти чёрный
-    wallGfx.fillRect(0, 0, 32, 32);
-    wallGfx.generateTexture('wall', 32, 32);
-
-    // --- Стол с компьютером (ВЕРТИКАЛЬНЫЙ) ---
+    // --- Стол с компьютером (слева) ---
     const deskGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    deskGfx.fillStyle(0x222222);
-    deskGfx.fillRect(0, 0, 48, 96);
-    deskGfx.lineStyle(2, 0x000000);
-    deskGfx.strokeRect(0, 0, 48, 96);
-    deskGfx.fillStyle(0x333333);
-    deskGfx.fillRect(8, 8, 32, 32);
-    deskGfx.fillStyle(0x00ff00);
-    deskGfx.fillRect(12, 12, 24, 24);
-    deskGfx.generateTexture('computer_desk', 48, 96);
+    drawOutline(deskGfx, 0, 0, 80, 40);
+    // Монитор
+    drawOutline(deskGfx, 10, 10, 30, 20);
+    // Клавиатура/мышь (просто линии)
+    deskGfx.lineBetween(50, 20, 70, 20);
+    deskGfx.lineBetween(50, 25, 60, 25);
+    deskGfx.generateTexture('desk', 80, 40);
 
-    // --- Кровать ---
+    // --- Кровать (справа) ---
     const bedGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    bedGfx.fillStyle(0x333333);
-    bedGfx.fillRect(0, 0, 64, 96);
-    bedGfx.fillStyle(0x555555);
-    bedGfx.fillRect(8, 8, 48, 24);
-    bedGfx.generateTexture('bed', 64, 96);
+    drawOutline(bedGfx, 0, 0, 50, 90);
+    // Подушка
+    drawOutline(bedGfx, 5, 5, 40, 15);
+    bedGfx.generateTexture('bed', 50, 90);
 
-    // --- Шкаф ---
+    // --- Шкаф (слева, под столом) ---
     const wardrobeGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    wardrobeGfx.fillStyle(0x2a2a2a);
-    wardrobeGfx.fillRect(0, 0, 48, 96);
-    wardrobeGfx.lineStyle(2, 0x000000);
-    wardrobeGfx.strokeRect(4, 4, 40, 88);
-    wardrobeGfx.generateTexture('wardrobe', 48, 96);
+    drawOutline(wardrobeGfx, 0, 0, 60, 80);
+    // Дверцы
+    wardrobeGfx.lineBetween(30, 0, 30, 80);
+    // Ручки
+    wardrobeGfx.lineBetween(25, 40, 25, 50);
+    wardrobeGfx.lineBetween(35, 40, 35, 50);
+    wardrobeGfx.generateTexture('wardrobe', 60, 80);
 
-    // --- Дверь (визуальная) ---
-    const doorGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    doorGfx.fillStyle(0x4a2a1a);
-    doorGfx.fillRect(0, 0, 32, 64);
-    doorGfx.lineStyle(2, 0x000000);
-    doorGfx.strokeRect(0, 0, 32, 64);
-    doorGfx.fillStyle(0xffff00);
-    doorGfx.fillRect(24, 32, 4, 4);
-    doorGfx.generateTexture('door', 32, 64);
+    // --- Ковер (в центре) ---
+    const carpetGfx = this.make.graphics({ x: 0, y: 0, add: false });
+    drawOutline(carpetGfx, 0, 0, 120, 60);
+    // Бахрома (полоски)
+    for (let i = 0; i < 120; i += 5) {
+        carpetGfx.lineBetween(i, 0, i, 3);
+        carpetGfx.lineBetween(i, 57, i, 60);
+    }
+    carpetGfx.generateTexture('carpet', 120, 60);
 
     // ==========================================
-    // 2. ПОСТРОЕНИЕ КОМНАТЫ
+    // 2. ПОСТРОЕНИЕ КОМНАТЫ (СТЕНЫ И ДВЕРЬ)
     // ==========================================
     
-    const roomWidth = 12; // 384
-    const roomHeight = 9;  // 288
+    const roomWidth = 600; // Ширина комнаты
+    const roomHeight = 400; // Высота комнаты
+    const wallOffset = 50; // Отступ стен от краев экрана
 
-    // --- Пол ---
-    for (let x = 0; x < roomWidth; x++) {
-        for (let y = 0; y < roomHeight; y++) {
-            this.add.image(x * 32 + 16, y * 32 + 16, 'floor');
-        }
-    }
+    // --- Рисуем стены (белые линии) ---
+    const wallsGfx = this.add.graphics();
+    wallsGfx.lineStyle(3, 0xffffff, 1);
 
-    // --- ВИЗУАЛЬНЫЕ СТЕНЫ (с проёмом) ---
-    // Верхняя стена (сплошная)
-    for (let x = 0; x < roomWidth; x++) {
-        this.add.image(x * 32 + 16, 16, 'wall');
-    }
-    // Нижняя стена (сплошная)
-    for (let x = 0; x < roomWidth; x++) {
-        this.add.image(x * 32 + 16, roomHeight * 32 - 16, 'wall');
-    }
-    // Правая стена (сплошная)
-    for (let y = 1; y < roomHeight - 1; y++) {
-        this.add.image(roomWidth * 32 - 16, y * 32 + 16, 'wall');
-    }
-    
-    // ЛЕВАЯ СТЕНА (с проёмом для двери)
-    // Верхняя часть стены (от 1 до 4 тайлов)
-    for (let y = 1; y < 5; y++) {
-        this.add.image(16, y * 32 + 16, 'wall');
-    }
-    // Нижняя часть стены (от 7 до 8 тайлов)
-    for (let y = 7; y < roomHeight - 1; y++) {
-        this.add.image(16, y * 32 + 16, 'wall');
-    }
-    // Проём (y = 5 и y = 6) — здесь будет дверь
+    // Верхняя стена
+    wallsGfx.lineBetween(wallOffset, wallOffset, wallOffset + roomWidth, wallOffset);
+    // Правая стена
+    wallsGfx.lineBetween(wallOffset + roomWidth, wallOffset, wallOffset + roomWidth, wallOffset + roomHeight);
+    // Нижняя стена
+    wallsGfx.lineBetween(wallOffset, wallOffset + roomHeight, wallOffset + roomWidth, wallOffset + roomHeight);
+    // Левая стена (с выступом для двери)
+    // Верхняя часть
+    wallsGfx.lineBetween(wallOffset, wallOffset, wallOffset, wallOffset + 150);
+    // Выступ (дверь)
+    wallsGfx.lineBetween(wallOffset, wallOffset + 150, wallOffset - 40, wallOffset + 150);
+    wallsGfx.lineBetween(wallOffset - 40, wallOffset + 150, wallOffset - 40, wallOffset + 250);
+    wallsGfx.lineBetween(wallOffset - 40, wallOffset + 250, wallOffset, wallOffset + 250);
+    // Нижняя часть
+    wallsGfx.lineBetween(wallOffset, wallOffset + 250, wallOffset, wallOffset + roomHeight);
 
     // ==========================================
-    // 3. НЕВИДИМЫЕ КОЛЛИЗИИ
-    // ==========================================
-    const walls = this.physics.add.staticGroup();
-    // Верх
-    walls.create(roomWidth * 32 / 2, 0, null).setSize(roomWidth * 32, 32).setVisible(false);
-    // Низ
-    walls.create(roomWidth * 32 / 2, roomHeight * 32, null).setSize(roomWidth * 32, 32).setVisible(false);
-    // Право
-    walls.create(roomWidth * 32, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false);
-    // Лево (верхняя часть)
-    walls.create(0, 3 * 32, null).setSize(32, 4 * 32).setVisible(false);
-    // Лево (нижняя часть)
-    walls.create(0, 7.5 * 32, null).setSize(32, 3 * 32).setVisible(false);
-
-    // ==========================================
-    // 4. ОБЪЕКТЫ
+    // 3. РАССТАНОВКА МЕБЕЛИ
     // ==========================================
 
-    // --- Дверь (в проёме) ---
-    // Ставим её ровно в проём (x=16, y=5*32 + 32 = 192)
-    this.add.image(16, 192, 'door');
+    // --- Стол (слева, у верхней стены) ---
+    const desk = this.physics.add.staticImage(wallOffset + 60, wallOffset + 30, 'desk');
+    desk.body.setSize(80, 40).setOffset(0, 0);
 
-    // --- Стол с компьютером (слева, ВЫШЕ двери) ---
-    const desk = this.physics.add.staticImage(24, 48, 'computer_desk');
-    desk.body.setSize(48, 96).setOffset(0, 0);
+    // --- Шкаф (слева, под столом) ---
+    const wardrobe = this.physics.add.staticImage(wallOffset + 40, wallOffset + 100, 'wardrobe');
+    wardrobe.body.setSize(60, 80).setOffset(0, 0);
 
-    // --- Кровать (ПРАВЫЙ ВЕРХНИЙ УГОЛ) ---
-    const bed = this.physics.add.staticImage(352, 48, 'bed');
-    bed.body.setSize(64, 96).setOffset(0, 0);
+    // --- Кровать (справа, у верхней стены) ---
+    const bed = this.physics.add.staticImage(wallOffset + roomWidth - 40, wallOffset + 50, 'bed');
+    bed.body.setSize(50, 90).setOffset(0, 0);
 
-    // --- Шкаф (Внизу по центру) ---
-    const wardrobe = this.physics.add.staticImage(192, 240, 'wardrobe');
-    wardrobe.body.setSize(48, 96).setOffset(0, 0);
+    // --- Ковер (в центре) ---
+    this.add.image(wallOffset + roomWidth / 2, wallOffset + roomHeight / 2, 'carpet');
 
     // ==========================================
-    // 5. ИГРОК И NPC
+    // 4. ИГРОК И NPC
     // ==========================================
 
-    const player = this.add.circle(192, 150, 12, 0x0000FF);
+    // --- Игрок (маленький квадрат) ---
+    const player = this.add.rectangle(wallOffset + roomWidth / 2, wallOffset + roomHeight / 2 + 50, 16, 16, 0x0000ff);
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
 
-    const npc = this.add.rectangle(192, 100, 24, 24, 0xa855f7);
+    // --- NPC (Астартес) ---
+    const npc = this.add.rectangle(wallOffset + roomWidth / 2, wallOffset + roomHeight / 2 - 50, 16, 16, 0xa855f7);
     this.physics.add.existing(npc);
     npc.body.setImmovable(true);
     npc.body.allowGravity = false;
 
-    this.add.text(192, 60, 'Астартес', { 
-        fontSize: '16px', 
+    this.add.text(npc.x, npc.y - 20, 'Астартес', { 
+        fontSize: '14px', 
         fill: '#a855f7', 
         fontFamily: 'Courier New' 
     }).setOrigin(0.5);
 
     // ==========================================
-    // 6. КОЛЛИЗИИ
+    // 5. КОЛЛИЗИИ
     // ==========================================
+    
+    // Создаем невидимые стены для физики
+    const walls = this.physics.add.staticGroup();
+    // Верх
+    walls.create(wallOffset + roomWidth / 2, wallOffset, null).setSize(roomWidth, 10).setVisible(false);
+    // Низ
+    walls.create(wallOffset + roomWidth / 2, wallOffset + roomHeight, null).setSize(roomWidth, 10).setVisible(false);
+    // Право
+    walls.create(wallOffset + roomWidth, wallOffset + roomHeight / 2, null).setSize(10, roomHeight).setVisible(false);
+    // Лево (верхняя часть)
+    walls.create(wallOffset, wallOffset + 75, null).setSize(10, 150).setVisible(false);
+    // Лево (нижняя часть)
+    walls.create(wallOffset, wallOffset + 325, null).setSize(10, 150).setVisible(false);
+    // Выступ (дверь) - стенки
+    walls.create(wallOffset - 20, wallOffset + 150, null).setSize(40, 10).setVisible(false); // Верх выступа
+    walls.create(wallOffset - 20, wallOffset + 250, null).setSize(40, 10).setVisible(false); // Низ выступа
+    walls.create(wallOffset - 40, wallOffset + 200, null).setSize(10, 100).setVisible(false); // Задняя стенка
+
     this.physics.add.collider(player, walls);
     this.physics.add.collider(player, desk);
     this.physics.add.collider(player, bed);
@@ -182,26 +166,24 @@ function create() {
     this.physics.add.collider(player, npc);
 
     // ==========================================
-    // 7. ЗОНА ПЕРЕХОДА (у двери)
+    // 6. ЛОГИКА ПЕРЕХОДА (ТЕЛЕПОРТ)
     // ==========================================
-    const doorZone = this.add.zone(16, 192, 32, 64);
+    const doorZone = this.add.zone(wallOffset - 20, wallOffset + 200, 40, 80);
     this.physics.add.existing(doorZone, true);
     
     this.physics.add.overlap(player, doorZone, () => {
-        player.setPosition(350, 250); // Телепорт (заглушка)
+        player.setPosition(wallOffset + roomWidth - 50, wallOffset + roomHeight - 50); // Телепорт
     });
 
     // ==========================================
-    // 8. КАМЕРА
+    // 7. КАМЕРА
     // ==========================================
-    this.physics.world.setBounds(0, 0, roomWidth * 32, roomHeight * 32);
-    this.cameras.main.centerOn(roomWidth * 32 / 2, roomHeight * 32 / 2);
-    this.cameras.main.setZoom(2);
+    this.cameras.main.centerOn(400, 300);
+    this.cameras.main.setZoom(1.2); // Чуть приближаем
 
     // ==========================================
-    // 9. УПРАВЛЕНИЕ И ДИАЛОГИ
+    // 8. УПРАВЛЕНИЕ И ДИАЛОГИ
     // ==========================================
-
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys('W,A,S,D,E');
 
@@ -232,8 +214,8 @@ function create() {
             this.dialogOpen = true;
             this.dialogElement.style.display = 'flex';
             document.getElementById('dialog-text').innerHTML = `
-                > Астартес: 'Ты видишь эту дверь? За ней начинается твой путь.<br>
-                Но не все двери открыты для тебя. Да будет мрак.'<br><br>
+                > Астартес: 'Добро пожаловать в твою комнату.<br>
+                Здесь ты будешь отдыхать между заданиями. Да будет мрак.'<br><br>
                 <span style='color:#666'>[E] Закрыть</span>
             `;
         }
