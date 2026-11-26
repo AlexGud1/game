@@ -35,7 +35,13 @@ function create() {
     floorGfx.lineBetween(0, 16, 32, 16);
     floorGfx.generateTexture('floor', 32, 32);
 
-    // --- Стол с компьютером (ВЕРТИКАЛЬНЫЙ, монитор сверху) ---
+    // --- Текстура стены (просто тёмный прямоугольник) ---
+    const wallGfx = this.make.graphics({ x: 0, y: 0, add: false });
+    wallGfx.fillStyle(0x0a0a0a); // Почти чёрный
+    wallGfx.fillRect(0, 0, 32, 32);
+    wallGfx.generateTexture('wall', 32, 32);
+
+    // --- Стол с компьютером (ВЕРТИКАЛЬНЫЙ) ---
     const deskGfx = this.make.graphics({ x: 0, y: 0, add: false });
     deskGfx.fillStyle(0x222222);
     deskGfx.fillRect(0, 0, 48, 96);
@@ -65,11 +71,11 @@ function create() {
 
     // --- Дверь (визуальная) ---
     const doorGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    doorGfx.fillStyle(0x4a2a1a); // Коричневая дверь
+    doorGfx.fillStyle(0x4a2a1a);
     doorGfx.fillRect(0, 0, 32, 64);
     doorGfx.lineStyle(2, 0x000000);
     doorGfx.strokeRect(0, 0, 32, 64);
-    doorGfx.fillStyle(0xffff00); // Ручка
+    doorGfx.fillStyle(0xffff00);
     doorGfx.fillRect(24, 32, 4, 4);
     doorGfx.generateTexture('door', 32, 64);
 
@@ -87,34 +93,57 @@ function create() {
         }
     }
 
-    // --- НЕВИДИМЫЕ СТЕНЫ (с проходом для двери) ---
-    const walls = this.physics.add.staticGroup();
-    
+    // --- ВИЗУАЛЬНЫЕ СТЕНЫ (с проёмом) ---
     // Верхняя стена (сплошная)
-    walls.create(roomWidth * 32 / 2, 0, null).setSize(roomWidth * 32, 32).setVisible(false);
+    for (let x = 0; x < roomWidth; x++) {
+        this.add.image(x * 32 + 16, 16, 'wall');
+    }
     // Нижняя стена (сплошная)
-    walls.create(roomWidth * 32 / 2, roomHeight * 32, null).setSize(roomWidth * 32, 32).setVisible(false);
+    for (let x = 0; x < roomWidth; x++) {
+        this.add.image(x * 32 + 16, roomHeight * 32 - 16, 'wall');
+    }
     // Правая стена (сплошная)
-    walls.create(roomWidth * 32, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false);
+    for (let y = 1; y < roomHeight - 1; y++) {
+        this.add.image(roomWidth * 32 - 16, y * 32 + 16, 'wall');
+    }
     
-    // ЛЕВАЯ СТЕНА (разделена на две части, чтобы оставить проход)
-    // Верхняя часть (от 0 до 150)
-    walls.create(0, 75, null).setSize(32, 150).setVisible(false);
-    // Нижняя часть (от 214 до 288)
-    walls.create(0, 251, null).setSize(32, 74).setVisible(false);
-    // Проход (между 150 и 214) — там будет дверь
+    // ЛЕВАЯ СТЕНА (с проёмом для двери)
+    // Верхняя часть стены (от 1 до 4 тайлов)
+    for (let y = 1; y < 5; y++) {
+        this.add.image(16, y * 32 + 16, 'wall');
+    }
+    // Нижняя часть стены (от 7 до 8 тайлов)
+    for (let y = 7; y < roomHeight - 1; y++) {
+        this.add.image(16, y * 32 + 16, 'wall');
+    }
+    // Проём (y = 5 и y = 6) — здесь будет дверь
 
     // ==========================================
-    // 3. ОБЪЕКТЫ
+    // 3. НЕВИДИМЫЕ КОЛЛИЗИИ
+    // ==========================================
+    const walls = this.physics.add.staticGroup();
+    // Верх
+    walls.create(roomWidth * 32 / 2, 0, null).setSize(roomWidth * 32, 32).setVisible(false);
+    // Низ
+    walls.create(roomWidth * 32 / 2, roomHeight * 32, null).setSize(roomWidth * 32, 32).setVisible(false);
+    // Право
+    walls.create(roomWidth * 32, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false);
+    // Лево (верхняя часть)
+    walls.create(0, 3 * 32, null).setSize(32, 4 * 32).setVisible(false);
+    // Лево (нижняя часть)
+    walls.create(0, 7.5 * 32, null).setSize(32, 3 * 32).setVisible(false);
+
+    // ==========================================
+    // 4. ОБЪЕКТЫ
     // ==========================================
 
-    // --- Стол с компьютером (ВДОЛЬ ЛЕВОЙ СТЕНЫ, ВЫШЕ ДВЕРИ) ---
+    // --- Дверь (в проёме) ---
+    // Ставим её ровно в проём (x=16, y=5*32 + 32 = 192)
+    this.add.image(16, 192, 'door');
+
+    // --- Стол с компьютером (слева, ВЫШЕ двери) ---
     const desk = this.physics.add.staticImage(24, 48, 'computer_desk');
     desk.body.setSize(48, 96).setOffset(0, 0);
-
-    // --- Дверь (ВИЗУАЛЬНО) ---
-    // Ставим её в проходе (y = 182 — центр прохода)
-    this.add.image(16, 182, 'door');
 
     // --- Кровать (ПРАВЫЙ ВЕРХНИЙ УГОЛ) ---
     const bed = this.physics.add.staticImage(352, 48, 'bed');
@@ -125,7 +154,7 @@ function create() {
     wardrobe.body.setSize(48, 96).setOffset(0, 0);
 
     // ==========================================
-    // 4. ИГРОК И NPC
+    // 5. ИГРОК И NPC
     // ==========================================
 
     const player = this.add.circle(192, 150, 12, 0x0000FF);
@@ -144,7 +173,7 @@ function create() {
     }).setOrigin(0.5);
 
     // ==========================================
-    // 5. КОЛЛИЗИИ
+    // 6. КОЛЛИЗИИ
     // ==========================================
     this.physics.add.collider(player, walls);
     this.physics.add.collider(player, desk);
@@ -153,30 +182,24 @@ function create() {
     this.physics.add.collider(player, npc);
 
     // ==========================================
-    // 6. ЛОГИКА ПЕРЕХОДА (ТЕЛЕПОРТ)
+    // 7. ЗОНА ПЕРЕХОДА (у двери)
     // ==========================================
-    // Создаем невидимую зону у двери
-    const doorZone = this.add.zone(16, 182, 32, 64);
+    const doorZone = this.add.zone(16, 192, 32, 64);
     this.physics.add.existing(doorZone, true);
     
-    // Когда игрок касается зоны двери, телепортируем его
     this.physics.add.overlap(player, doorZone, () => {
-        // В будущем здесь можно сделать переход на другую сцену.
-        // Пока просто телепортируем в правый нижний угол.
-        player.setPosition(350, 250);
-        // И показываем сообщение (опционально)
-        // this.dialogOpen = true; ... (но лучше сделать отдельную сцену)
+        player.setPosition(350, 250); // Телепорт (заглушка)
     });
 
     // ==========================================
-    // 7. КАМЕРА
+    // 8. КАМЕРА
     // ==========================================
     this.physics.world.setBounds(0, 0, roomWidth * 32, roomHeight * 32);
     this.cameras.main.centerOn(roomWidth * 32 / 2, roomHeight * 32 / 2);
     this.cameras.main.setZoom(2);
 
     // ==========================================
-    // 8. УПРАВЛЕНИЕ И ДИАЛОГИ
+    // 9. УПРАВЛЕНИЕ И ДИАЛОГИ
     // ==========================================
 
     this.cursors = this.input.keyboard.createCursorKeys();
