@@ -4,7 +4,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     pixelArt: true,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#1a1a1a', // Темный фон за пределами комнаты
     physics: {
         default: 'arcade',
         arcade: { gravity: { y: 0 }, debug: false }
@@ -35,17 +35,16 @@ function create() {
     floorGfx.lineBetween(0, 16, 32, 16);
     floorGfx.generateTexture('floor', 32, 32);
 
-    // --- Рабочий стол с компьютером (развернут вправо) ---
+    // --- Рабочий стол с компьютером (монитор справа) ---
     const deskGfx = this.make.graphics({ x: 0, y: 0, add: false });
     deskGfx.fillStyle(0x222222);
     deskGfx.fillRect(0, 0, 96, 48);
     deskGfx.lineStyle(2, 0x000000);
     deskGfx.strokeRect(0, 0, 96, 48);
-    // Монитор (смещен вправо)
     deskGfx.fillStyle(0x333333);
     deskGfx.fillRect(56, 4, 32, 32); // Монитор справа
     deskGfx.fillStyle(0x00ff00);
-    deskGfx.fillRect(60, 8, 24, 24); // Зеленый экран
+    deskGfx.fillRect(60, 8, 24, 24);
     deskGfx.generateTexture('computer_desk', 96, 48);
 
     // --- Кровать ---
@@ -53,7 +52,7 @@ function create() {
     bedGfx.fillStyle(0x333333);
     bedGfx.fillRect(0, 0, 64, 96);
     bedGfx.fillStyle(0x555555);
-    bedGfx.fillRect(8, 8, 48, 24); // Подушка
+    bedGfx.fillRect(8, 8, 48, 24);
     bedGfx.generateTexture('bed', 64, 96);
 
     // --- Шкаф ---
@@ -65,49 +64,45 @@ function create() {
     wardrobeGfx.generateTexture('wardrobe', 48, 96);
 
     // ==========================================
-    // 2. ПОСТРОЕНИЕ КОМНАТЫ (БЕЗ БЕЛЫХ СТЕН)
+    // 2. ПОСТРОЕНИЕ КОМНАТЫ (НА ВЕСЬ ЭКРАН)
     // ==========================================
     
-    const roomWidth = 15;
-    const roomHeight = 11;
+    const roomWidth = 25; // 25 * 32 = 800
+    const roomHeight = 19; // 19 * 32 = 608 (чуть больше 600)
 
-    // --- Только пол (стены невидимы) ---
+    // --- Пол ---
     for (let x = 0; x < roomWidth; x++) {
         for (let y = 0; y < roomHeight; y++) {
             this.add.image(x * 32 + 16, y * 32 + 16, 'floor');
         }
     }
 
-    // --- НЕВИДИМЫЕ ГРАНИЦЫ (чтобы игрок не выходил) ---
-    // Создаем статическую группу для стен
+    // --- Невидимые границы ---
     const walls = this.physics.add.staticGroup();
-    // Верхняя стена
     walls.create(roomWidth * 32 / 2, 0, null).setSize(roomWidth * 32, 32).setVisible(false);
-    // Нижняя стена
     walls.create(roomWidth * 32 / 2, roomHeight * 32, null).setSize(roomWidth * 32, 32).setVisible(false);
-    // Левая стена
     walls.create(0, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false);
-    // Правая стена
     walls.create(roomWidth * 32, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false);
 
     // ==========================================
     // 3. ОБЪЕКТЫ (РАССТАНОВКА)
     // ==========================================
 
-    // --- Кровать (в левом верхнем углу) ---
-    // Прижимаем к левой и верхней стене. Ширина кровати 64, высота 96.
-    // Ставим так, чтобы левый верхний угол кровати был в (32, 32) - внутренняя часть стены.
-    const bed = this.physics.add.staticImage(32 + 32, 32 + 48, 'bed'); // x = 64, y = 80
+    // --- Кровать (в левом верхнем углу, прижата к стенам) ---
+    // x = 32 (стена) + 32 (половина ширины кровати) = 64
+    // y = 32 (стена) + 48 (половина высоты кровати) = 80
+    const bed = this.physics.add.staticImage(64, 80, 'bed');
     bed.body.setSize(64, 96).setOffset(0, 0);
 
-    // --- Рабочий стол (прижат к левой стене, ниже кровати, развернут к ней) ---
+    // --- Рабочий стол (прижат к левой стене, ниже кровати) ---
     // Монитор справа, значит, стол стоит слева, а экран смотрит вправо (к кровати).
-    // Ширина стола 96, высота 48.
-    const desk = this.physics.add.staticImage(32 + 48, 200, 'computer_desk'); // x = 80, y = 200
+    // x = 32 (стена) + 48 (половина ширины стола) = 80
+    // y = 200 (просто ниже кровати)
+    const desk = this.physics.add.staticImage(80, 250, 'computer_desk');
     desk.body.setSize(96, 32).setOffset(0, 16);
 
     // --- Шкаф (справа, для баланса) ---
-    const wardrobe = this.physics.add.staticImage(400, 250, 'wardrobe');
+    const wardrobe = this.physics.add.staticImage(700, 300, 'wardrobe');
     wardrobe.body.setSize(48, 96).setOffset(0, 0);
 
     // ==========================================
@@ -115,18 +110,18 @@ function create() {
     // ==========================================
 
     // --- Игрок ---
-    const player = this.add.circle(240, 300, 12, 0x0000FF);
+    const player = this.add.circle(400, 400, 12, 0x0000FF);
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
 
     // --- NPC (Астартес) ---
-    const npc = this.add.rectangle(300, 180, 24, 24, 0xa855f7);
+    const npc = this.add.rectangle(500, 300, 24, 24, 0xa855f7);
     this.physics.add.existing(npc);
     npc.body.setImmovable(true);
     npc.body.allowGravity = false;
 
     // Текст над NPC
-    this.add.text(300, 140, 'Астартес', { 
+    this.add.text(500, 260, 'Астартес', { 
         fontSize: '16px', 
         fill: '#a855f7', 
         fontFamily: 'Courier New' 
@@ -135,22 +130,19 @@ function create() {
     // ==========================================
     // 5. КОЛЛИЗИИ
     // ==========================================
-    this.physics.add.collider(player, walls); // Невидимые стены
+    this.physics.add.collider(player, walls);
     this.physics.add.collider(player, desk);
     this.physics.add.collider(player, bed);
     this.physics.add.collider(player, wardrobe);
     this.physics.add.collider(player, npc);
 
     // ==========================================
-    // 6. КАМЕРА (СТАТИЧНАЯ)
+    // 6. КАМЕРА (СТАТИЧНАЯ, НА ВЕСЬ ЭКРАН)
     // ==========================================
     
-    // Камера не следит за игроком, а показывает всю комнату
-    // Устанавливаем границы мира (размер комнаты)
     this.physics.world.setBounds(0, 0, roomWidth * 32, roomHeight * 32);
     this.cameras.main.setBounds(0, 0, roomWidth * 32, roomHeight * 32);
-    
-    // Центрируем камеру на комнате (опционально)
+    // Центрируем камеру
     this.cameras.main.centerOn(roomWidth * 32 / 2, roomHeight * 32 / 2);
 
     // ==========================================
