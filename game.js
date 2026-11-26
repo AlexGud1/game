@@ -91,19 +91,18 @@ function OfficeScene() {
         const WIDTH = 800;
         const HEIGHT = 600;
         
-        // Границы комнаты (комната небольшая, смещена вправо из-за выступа слева)
-        const ROOM_LEFT = 250;
-        const ROOM_RIGHT = 800;
+        // Границы комнаты
+        const ROOM_LEFT = 200; // Сдвинули влево, чтобы было больше места
+        const ROOM_RIGHT = 780;
         const ROOM_TOP = 150;
-        const ROOM_BOTTOM = 600;
+        const ROOM_BOTTOM = 580;
         const ROOM_WIDTH = ROOM_RIGHT - ROOM_LEFT;
-        const ROOM_HEIGHT = ROOM_BOTTOM - ROOM_TOP;
 
         // ==========================================
         // 1. ГЕНЕРАЦИЯ ТЕКСТУР
         // ==========================================
         
-        // Пол (металлические плиты)
+        // Пол
         const floorGfx = this.make.graphics({ x: 0, y: 0, add: false });
         floorGfx.fillStyle(0x1a1a1a);
         floorGfx.fillRect(0, 0, 64, 64);
@@ -111,77 +110,90 @@ function OfficeScene() {
         floorGfx.strokeRect(0, 0, 64, 64);
         floorGfx.generateTexture('floor', 64, 64);
 
-        // Высокая стена
+        // Высокая стена (создаём объём)
         const wallGfx = this.make.graphics({ x: 0, y: 0, add: false });
-        wallGfx.fillStyle(0x2a2a3a);
+        
+        // 1. Задняя часть (тёмная)
+        wallGfx.fillStyle(0x151520); 
         wallGfx.fillRect(0, 0, 800, 150);
-        wallGfx.lineStyle(4, 0x4B0082);
-        wallGfx.lineBetween(0, 0, 800, 0);
+        
+        // 2. Верхняя грань (светлее, как будто падает свет)
+        wallGfx.fillStyle(0x2a2a3a);
+        wallGfx.fillRect(0, 0, 800, 40);
+        
+        // 3. Передняя часть (основная стена)
+        wallGfx.fillStyle(0x1e1e28);
+        wallGfx.fillRect(0, 40, 800, 90);
+        
+        // 4. Плинтус
+        wallGfx.fillStyle(0x4B0082);
+        wallGfx.fillRect(0, 130, 800, 20);
+        
+        // 5. Тёмная линия стыка
+        wallGfx.lineStyle(2, 0x000000);
+        wallGfx.lineBetween(0, 130, 800, 130);
+
         wallGfx.generateTexture('tall_wall', 800, 150);
 
-        // Кровать (двуспальная, темная)
+        // Кровать
         const bedGfx = this.make.graphics({ x: 0, y: 0, add: false });
-        bedGfx.fillStyle(0x222222); // Каркас
-        bedGfx.fillRect(0, 0, 120, 160);
-        bedGfx.fillStyle(0x4a1a4a); // Одеяло (фиолетовое)
-        bedGfx.fillRect(10, 10, 100, 140);
-        bedGfx.fillStyle(0xeeeeee); // Подушка
-        bedGfx.fillRect(20, 10, 80, 30);
+        bedGfx.fillStyle(0x222222); 
+        bedGfx.fillRect(0, 0, 100, 140);
+        bedGfx.fillStyle(0x4a1a4a); 
+        bedGfx.fillRect(8, 8, 84, 124);
+        bedGfx.fillStyle(0xeeeeee); 
+        bedGfx.fillRect(15, 8, 70, 25);
         bedGfx.lineStyle(2, 0x000);
-        bedGfx.strokeRect(0, 0, 120, 160);
-        bedGfx.generateTexture('bed', 120, 160);
+        bedGfx.strokeRect(0, 0, 100, 140);
+        bedGfx.generateTexture('bed', 100, 140);
 
-        // Рабочий стол с компьютером
+        // Стол с ПК
         const deskGfx = this.make.graphics({ x: 0, y: 0, add: false });
-        deskGfx.fillStyle(0x3a2a1a); // Дерево
-        deskGfx.fillRect(0, 0, 160, 80);
-        deskGfx.lineStyle(3, 0x1a0a00);
-        deskGfx.strokeRect(0, 0, 160, 80);
+        deskGfx.fillStyle(0x3a2a1a);
+        deskGfx.fillRect(0, 0, 140, 70);
+        deskGfx.lineStyle(2, 0x1a0a00);
+        deskGfx.strokeRect(0, 0, 140, 70);
         // Монитор
         deskGfx.fillStyle(0x111111);
-        deskGfx.fillRect(50, 10, 60, 40);
-        deskGfx.fillStyle(0xa855f7); // Светящийся экран
-        deskGfx.fillRect(55, 15, 50, 30);
+        deskGfx.fillRect(40, 5, 60, 35);
+        deskGfx.fillStyle(0xa855f7);
+        deskGfx.fillRect(45, 10, 50, 25);
         // Клавиатура
-        deskGfx.fillStyle(0x222222);
-        deskGfx.fillRect(60, 55, 40, 15);
-        deskGfx.generateTexture('desk_pc', 160, 80);
+        deskGfx.fillStyle(0x333333);
+        deskGfx.fillRect(50, 50, 40, 12);
+        deskGfx.generateTexture('desk_pc', 140, 70);
 
-        // Сейф (важный предмет для лора)
+        // Сейф
         const safeGfx = this.make.graphics({ x: 0, y: 0, add: false });
         safeGfx.fillStyle(0x333333);
-        safeGfx.fillRect(0, 0, 60, 60);
-        safeGfx.lineStyle(3, 0x000);
-        safeGfx.strokeRect(0, 0, 60, 60);
-        // Ручка сейфа
-        safeGfx.lineStyle(4, 0x888888);
-        safeGfx.strokeCircle(30, 30, 10);
-        safeGfx.lineBetween(30, 30, 30, 15);
-        safeGfx.generateTexture('safe', 60, 60);
+        safeGfx.fillRect(0, 0, 50, 50);
+        safeGfx.lineStyle(2, 0x000);
+        safeGfx.strokeRect(0, 0, 50, 50);
+        safeGfx.lineStyle(3, 0x888888);
+        safeGfx.strokeCircle(25, 25, 8);
+        safeGfx.lineBetween(25, 25, 25, 15);
+        safeGfx.generateTexture('safe', 50, 50);
 
-        // Серверная стойка (для кибер-тематики)
+        // Серверная стойка
         const serverGfx = this.make.graphics({ x: 0, y: 0, add: false });
         serverGfx.fillStyle(0x111111);
-        serverGfx.fillRect(0, 0, 50, 120);
-        serverGfx.lineStyle(2, 0x333333);
-        serverGfx.strokeRect(0, 0, 50, 120);
-        // Мигающие индикаторы (просто полоски)
+        serverGfx.fillRect(0, 0, 40, 100);
+        serverGfx.lineStyle(1, 0x333333);
+        serverGfx.strokeRect(0, 0, 40, 100);
         serverGfx.fillStyle(0x00ff00);
-        serverGfx.fillRect(10, 20, 10, 5);
+        serverGfx.fillRect(8, 15, 8, 4);
         serverGfx.fillStyle(0xff0000);
-        serverGfx.fillRect(30, 20, 10, 5);
+        serverGfx.fillRect(24, 15, 8, 4);
         serverGfx.fillStyle(0x00ff00);
-        serverGfx.fillRect(10, 50, 10, 5);
-        serverGfx.fillStyle(0x00ff00);
-        serverGfx.fillRect(30, 80, 10, 5);
-        serverGfx.generateTexture('server', 50, 120);
+        serverGfx.fillRect(8, 40, 8, 4);
+        serverGfx.generateTexture('server', 40, 100);
 
         // Ковер
         const carpetGfx = this.make.graphics({ x: 0, y: 0, add: false });
-        carpetGfx.fillStyle(0x2a0a2a); // Темно-фиолетовый
+        carpetGfx.fillStyle(0x2a0a2a);
         carpetGfx.fillRect(0, 0, 200, 150);
         carpetGfx.lineStyle(2, 0x4B0082);
-        carpetGfx.strokeRect(10, 10, 180, 130);
+        carpetGfx.strokeRect(5, 5, 190, 140);
         carpetGfx.generateTexture('carpet', 200, 150);
 
         // ==========================================
@@ -195,18 +207,18 @@ function OfficeScene() {
             }
         }
         
-        // Заполняем выступ слева (коридор)
+        // Заполняем выступ слева
         for (let x = 0; x < ROOM_LEFT; x += 64) {
             for (let y = 350; y < 500; y += 64) {
                 this.add.image(x + 32, y + 32, 'floor');
             }
         }
 
-        // Стена наверху
+        // Стена
         this.add.image(400, 75, 'tall_wall');
 
-        // Ковер (под мебелью)
-        this.add.image(500, 400, 'carpet');
+        // Ковер
+        this.add.image(450, 400, 'carpet');
 
         // ==========================================
         // 3. МЕБЕЛЬ И ОБЪЕКТЫ (С КОЛЛИЗИЯМИ)
@@ -214,69 +226,80 @@ function OfficeScene() {
         
         const obstacles = this.physics.add.staticGroup();
 
-        // Кровать (в правом верхнем углу комнаты)
-        const bed = this.add.image(700, 250, 'bed');
+        // Кровать (в правом верхнем углу)
+        const bed = this.add.image(700, 220, 'bed');
         obstacles.add(bed);
 
-        // Стол с компьютером (справа, ниже кровати)
-        const desk = this.add.image(700, 380, 'desk_pc');
+        // Стол с ПК
+        const desk = this.add.image(700, 350, 'desk_pc');
         obstacles.add(desk);
 
-        // Сейф (в левом нижнем углу)
-        const safe = this.add.image(300, 520, 'safe');
+        // Сейф (в левом нижнем углу комнаты)
+        const safe = this.add.image(250, 520, 'safe');
         obstacles.add(safe);
 
-        // Серверная стойка (в правом нижнем углу)
-        const server = this.add.image(760, 520, 'server');
+        // Серверная стойка (в правом нижнем)
+        const server = this.add.image(750, 520, 'server');
         obstacles.add(server);
 
         // Невидимые стены (границы комнаты)
         const walls = this.physics.add.staticGroup();
         
-        // Верхняя стена
-        walls.create(400, ROOM_TOP, null).setSize(WIDTH, 20).setVisible(false);
-        // Нижняя стена
-        walls.create(400, ROOM_BOTTOM, null).setSize(WIDTH, 20).setVisible(false);
-        // Правая стена
-        walls.create(ROOM_RIGHT, 375, null).setSize(20, HEIGHT).setVisible(false);
+        walls.create(400, ROOM_TOP, null).setSize(WIDTH, 20).setVisible(false); // Верх
+        walls.create(400, ROOM_BOTTOM, null).setSize(WIDTH, 20).setVisible(false); // Низ
+        walls.create(ROOM_RIGHT, 375, null).setSize(20, HEIGHT).setVisible(false); // Право
         
-        // Левая стена (с проходом для выступа)
-        // Верхняя часть левой стены
-        walls.create(ROOM_LEFT, 200, null).setSize(20, 100).setVisible(false);
-        // Нижняя часть левой стены
-        walls.create(ROOM_LEFT, 550, null).setSize(20, 100).setVisible(false);
+        // Левая стена с проходом
+        walls.create(ROOM_LEFT, 200, null).setSize(20, 100).setVisible(false); // Верхняя часть
+        walls.create(ROOM_LEFT, 550, null).setSize(20, 100).setVisible(false); // Нижняя часть
         
-        // Стены выступа (коридора) слева
+        // Стены коридора
         walls.create(0, 300, null).setSize(20, 200).setVisible(false);
         walls.create(0, 550, null).setSize(20, 200).setVisible(false);
-        walls.create(125, 350, null).setSize(250, 20).setVisible(false);
-        walls.create(125, 500, null).setSize(250, 20).setVisible(false);
+        walls.create(100, 350, null).setSize(200, 20).setVisible(false);
+        walls.create(100, 500, null).setSize(200, 20).setVisible(false);
 
         // ==========================================
-        // 4. ИГРОК
+        // 4. ИГРОК (АСТРА)
         // ==========================================
 
-        // Генерация текстуры игрока (по референсу)
-        const playerGfx = this.make.graphics({ x: 0, y: 0, add: false });
-        playerGfx.fillStyle(0xcccccc); // Лицо
-        playerGfx.fillRect(10, 10, 12, 12);
-        playerGfx.fillStyle(0x000000); // Кепка
-        playerGfx.fillRect(6, 4, 20, 8);
-        playerGfx.fillStyle(0xffffff); // Козырек
-        playerGfx.fillRect(2, 10, 28, 4);
-        playerGfx.fillStyle(0x0000ff); // Синий значок на кепке
-        playerGfx.fillRect(14, 6, 4, 4);
-        playerGfx.fillStyle(0x000000); // Глаза
-        playerGfx.fillRect(12, 15, 2, 2);
-        playerGfx.fillRect(18, 15, 2, 2);
-        playerGfx.generateTexture('player_char', 32, 32);
+        // Создаём текстуру Астры (в стиле пиксель-арт)
+        const astraGfx = this.make.graphics({ x: 0, y: 0, add: false });
+        // Тело (плащ/форма)
+        astraGfx.fillStyle(0x1a1a2e); 
+        astraGfx.fillRect(8, 16, 16, 16); 
+        // Лицо
+        astraGfx.fillStyle(0xe0e0e0); 
+        astraGfx.fillRect(10, 8, 12, 10); 
+        // Волосы
+        astraGfx.fillStyle(0x000000); 
+        astraGfx.fillRect(8, 6, 16, 6); 
+        // Кепка (как на референсе)
+        astraGfx.fillStyle(0xffffff); 
+        astraGfx.fillRect(6, 2, 20, 6); 
+        astraGfx.fillStyle(0x000000); 
+        astraGfx.fillRect(4, 8, 24, 3); // Козырёк
+        // Синяя эмблема
+        astraGfx.fillStyle(0x0000ff); 
+        astraGfx.fillRect(14, 4, 4, 4); 
+        // Глаза
+        astraGfx.fillStyle(0x0000ff); 
+        astraGfx.fillRect(12, 12, 2, 2); 
+        astraGfx.fillRect(18, 12, 2, 2); 
+        // Руки
+        astraGfx.fillStyle(0xe0e0e0);
+        astraGfx.fillRect(6, 20, 4, 8);
+        astraGfx.fillRect(22, 20, 4, 8);
 
-        // Создание игрока (спавн в коридоре слева)
-        const player = this.add.sprite(125, 425, 'player_char');
+        astraGfx.generateTexture('astra_sprite', 32, 32);
+
+        // Спавн Астры в центре комнаты
+        const player = this.add.sprite(400, 450, 'astra_sprite');
         this.physics.add.existing(player);
         player.body.setCollideWorldBounds(true);
-        player.body.setSize(24, 24); // Хитбокс чуть меньше картинки
-        player.body.setOffset(4, 4);
+        // Хитбокс чуть меньше, чтобы не застревать в стенах
+        player.body.setSize(20, 24);
+        player.body.setOffset(6, 8);
 
         // ==========================================
         // 5. КОЛЛИЗИИ И УПРАВЛЕНИЕ
@@ -288,9 +311,11 @@ function OfficeScene() {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys('W,A,S,D,E');
 
-        // Камера
-        this.cameras.main.setZoom(1.2);
-        this.cameras.main.centerOn(525, 375); // Центрируем на комнате
+        // Камера: центрируем на Астре, но ограничиваем, чтобы не видеть пустоту
+        this.cameras.main.setBounds(0, 0, 800, 600);
+        this.cameras.main.setZoom(1.3);
+        this.cameras.main.startFollow(player, true, 0.1, 0.1);
+        this.cameras.main.setDeadzone(100, 100);
 
         // Сохраняем ссылки
         this.player = player;
@@ -299,7 +324,6 @@ function OfficeScene() {
     this.update = function () {
         const speed = 200;
 
-        // Движение
         if (this.cursors.left.isDown || this.keys.A.isDown) {
             this.player.body.setVelocityX(-speed);
         } else if (this.cursors.right.isDown || this.keys.D.isDown) {
