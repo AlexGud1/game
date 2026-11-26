@@ -35,17 +35,18 @@ function create() {
     floorGfx.lineBetween(0, 16, 32, 16);
     floorGfx.generateTexture('floor', 32, 32);
 
-    // --- Рабочий стол с компьютером (монитор справа) ---
+    // --- Рабочий стол с компьютером (ВЕРТИКАЛЬНЫЙ, монитор сверху) ---
     const deskGfx = this.make.graphics({ x: 0, y: 0, add: false });
     deskGfx.fillStyle(0x222222);
-    deskGfx.fillRect(0, 0, 96, 48);
+    deskGfx.fillRect(0, 0, 48, 96); // Ширина 48, высота 96
     deskGfx.lineStyle(2, 0x000000);
-    deskGfx.strokeRect(0, 0, 96, 48);
+    deskGfx.strokeRect(0, 0, 48, 96);
+    // Монитор сверху
     deskGfx.fillStyle(0x333333);
-    deskGfx.fillRect(56, 4, 32, 32); // Монитор справа
-    deskGfx.fillStyle(0x00ff00);
-    deskGfx.fillRect(60, 8, 24, 24); // Зеленый экран
-    deskGfx.generateTexture('computer_desk', 96, 48);
+    deskGfx.fillRect(8, 8, 32, 32);
+    deskGfx.fillStyle(0x00ff00); // Зеленый экран
+    deskGfx.fillRect(12, 12, 24, 24);
+    deskGfx.generateTexture('computer_desk', 48, 96);
 
     // --- Кровать ---
     const bedGfx = this.make.graphics({ x: 0, y: 0, add: false });
