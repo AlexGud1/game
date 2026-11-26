@@ -90,13 +90,14 @@ function OfficeScene() {
     this.create = function () {
         const BLOCK = 64;
         
-        // Границы комнаты (7x6 блоков)
-        const ROOM_LEFT = 256; // 4-й блок
+        // Комната: 7 блоков в ширину (448px), 6 в высоту (384px)
+        // Начинаем с x = 256, y = 128
+        const ROOM_LEFT = 256;
         const ROOM_RIGHT = ROOM_LEFT + 7 * BLOCK; // 256 + 448 = 704
         const ROOM_TOP = 128;
         const ROOM_BOTTOM = ROOM_TOP + 6 * BLOCK; // 128 + 384 = 512
         
-        // Коридор (1 блок шириной), прилегает слева по центру
+        // Коридор: 1 блок шириной, по центру левой стены
         const CORRIDOR_LEFT = ROOM_LEFT - BLOCK; // 192
         const CORRIDOR_RIGHT = ROOM_LEFT;        // 256
         const CORRIDOR_TOP = 256;
@@ -207,7 +208,7 @@ function OfficeScene() {
             this.add.image(CORRIDOR_LEFT + BLOCK/2, y + BLOCK/2, 'floor');
         }
         
-        // Стена
+        // Стена (на весь экран сверху)
         this.add.image(400, 64, 'tall_wall');
 
         // Ковер (в центре комнаты)
@@ -257,7 +258,7 @@ function OfficeScene() {
         walls.create(CORRIDOR_LEFT + 32, CORRIDOR_TOP, null).setSize(64, 20).setVisible(false);
         // Коридор: Нижняя стена
         walls.create(CORRIDOR_LEFT + 32, CORRIDOR_BOTTOM, null).setSize(64, 20).setVisible(false);
-        // Коридор: Левая стена (тупик, если нет перехода)
+        // Коридор: Левая стена (тупик)
         walls.create(CORRIDOR_LEFT, 320, null).setSize(20, 128).setVisible(false);
 
         // ==========================================
@@ -318,9 +319,9 @@ function OfficeScene() {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keys = this.input.keyboard.addKeys('W,A,S,D,E');
 
-        // Камера: видно всю комнату
+        // Камера: центрируем на комнате (центр комнаты: x = 480, y = 320)
         this.cameras.main.setZoom(1);
-        this.cameras.main.centerOn(448, 320); // Центр комнаты
+        this.cameras.main.centerOn(480, 320);
 
         // Сохраняем ссылки
         this.player = player;
