@@ -4,10 +4,10 @@ const config = {
     height: 600,
     parent: 'game-container',
     pixelArt: true,
-    backgroundColor: '#1a1a1a', // Темно-серый фон вместо черного
+    backgroundColor: '#1a1a1a',
     physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 0 }, debug: false }
+        arcade: { gravity: { y: 0 }, debug: false } // Включите true, чтобы увидеть хитбоксы
     },
     scene: {
         preload: preload,
@@ -18,118 +18,139 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-// === 1. PRELOAD ===
 function preload() {
-    // Мы не загружаем внешние картинки, а генерируем их в create()
+    // Пока ничего не грузим, все рисуем кодом
 }
 
-// === 2. CREATE ===
 function create() {
     // ==========================================
-    // ГЕНЕРАЦИЯ ТЕКСТУР (рисуем пиксели кодом)
+    // 1. ГЕНЕРАЦИЯ ТЕКСТУР (РИСУЕМ ДЕТАЛИ)
     // ==========================================
     
-    // 1. Текстура пола (плитка)
+    // --- Пол (темный паркет) ---
     const floorGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    floorGfx.fillStyle(0x2a2a2a); // Темно-серый
+    floorGfx.fillStyle(0x151515);
     floorGfx.fillRect(0, 0, 32, 32);
-    floorGfx.lineStyle(1, 0x1a1a1a); // Темная обводка
-    floorGfx.strokeRect(0, 0, 32, 32);
+    floorGfx.lineStyle(1, 0x0a0a0a);
+    floorGfx.lineBetween(0, 16, 32, 16);
     floorGfx.generateTexture('floor', 32, 32);
 
-    // 2. Текстура стены (обои)
+    // --- Стены (белые, как на скрине) ---
     const wallGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    wallGfx.fillStyle(0x3a2a4a); // Темно-фиолетовый
+    wallGfx.fillStyle(0xf0f0f0);
     wallGfx.fillRect(0, 0, 32, 32);
-    wallGfx.lineStyle(1, 0x2a1a3a); // Полосы
-    wallGfx.lineBetween(0, 16, 32, 16);
+    wallGfx.lineStyle(2, 0xcccccc);
+    wallGfx.strokeRect(0, 0, 32, 32);
     wallGfx.generateTexture('wall', 32, 32);
 
-    // 3. Текстура стола
+    // --- Рабочий стол с компьютером ---
     const deskGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    deskGfx.fillStyle(0x4a3a2a); // Коричневый
-    deskGfx.fillRect(0, 0, 64, 32);
-    deskGfx.lineStyle(2, 0x2a1a0a);
-    deskGfx.strokeRect(0, 0, 64, 32);
-    deskGfx.generateTexture('desk', 64, 32);
+    deskGfx.fillStyle(0x222222); // Темный стол
+    deskGfx.fillRect(0, 0, 96, 48);
+    deskGfx.lineStyle(2, 0x000000);
+    deskGfx.strokeRect(0, 0, 96, 48);
+    // Монитор
+    deskGfx.fillStyle(0x333333);
+    deskGfx.fillRect(16, 4, 64, 32);
+    deskGfx.fillStyle(0x00ff00); // Зеленый экран
+    deskGfx.fillRect(20, 8, 56, 24);
+    deskGfx.generateTexture('computer_desk', 96, 48);
 
-    // 4. Текстура ящика
-    const boxGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    boxGfx.fillStyle(0x5a4a3a); // Светло-коричневый
-    boxGfx.fillRect(0, 0, 32, 32);
-    boxGfx.lineStyle(1, 0x3a2a1a);
-    boxGfx.strokeRect(2, 2, 28, 28);
-    boxGfx.generateTexture('box', 32, 32);
+    // --- Кровать ---
+    const bedGfx = this.make.graphics({ x: 0, y: 0, add: false });
+    bedGfx.fillStyle(0x333333);
+    bedGfx.fillRect(0, 0, 64, 96);
+    bedGfx.fillStyle(0x555555); // Подушка
+    bedGfx.fillRect(8, 8, 48, 24);
+    bedGfx.generateTexture('bed', 64, 96);
 
-    // 5. Текстура ковра
-    const carpetGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    carpetGfx.fillStyle(0x5a1a1a); // Темно-красный
-    carpetGfx.fillRect(0, 0, 64, 64);
-    carpetGfx.lineStyle(2, 0x3a0a0a);
-    carpetGfx.strokeRect(4, 4, 56, 56);
-    carpetGfx.generateTexture('carpet', 64, 64);
+    // --- Шкаф ---
+    const wardrobeGfx = this.make.graphics({ x: 0, y: 0, add: false });
+    wardrobeGfx.fillStyle(0x2a2a2a);
+    wardrobeGfx.fillRect(0, 0, 48, 96);
+    wardrobeGfx.lineStyle(2, 0x000000);
+    wardrobeGfx.strokeRect(4, 4, 40, 88);
+    wardrobeGfx.generateTexture('wardrobe', 48, 96);
 
     // ==========================================
-    // ПОСТРОЕНИЕ КОМНАТЫ
+    // 2. ПОСТРОЕНИЕ КОМНАТЫ
     // ==========================================
 
-    // --- Пол (плитка по всей площади) ---
+    // --- Пол (фон) ---
     for (let x = 0; x < 25; x++) {
         for (let y = 0; y < 19; y++) {
             this.add.image(x * 32 + 16, y * 32 + 16, 'floor');
         }
     }
 
-    // --- Стены (рамка) ---
+    // --- Стены (границы комнаты) ---
     // Верхняя стена
     for (let x = 0; x < 25; x++) {
         this.add.image(x * 32 + 16, 16, 'wall');
     }
-    // Нижняя стена
-    for (let x = 0; x < 25; x++) {
-        this.add.image(x * 32 + 16, 19 * 32 - 16, 'wall');
-    }
-    // Левая стена
+    // Левая стена (с проходом)
     for (let y = 1; y < 18; y++) {
-        this.add.image(16, y * 32 + 16, 'wall');
+        if (y !== 12) { // Проход внизу
+            this.add.image(16, y * 32 + 16, 'wall');
+        }
     }
     // Правая стена
     for (let y = 1; y < 18; y++) {
         this.add.image(25 * 32 - 16, y * 32 + 16, 'wall');
     }
 
-    // --- Ковер в центре ---
-    this.add.image(400, 300, 'carpet');
+    // ==========================================
+    // 3. ОБЪЕКТЫ С ХИТБОКСАМИ
+    // ==========================================
 
-    // --- Стол в углу ---
-    this.add.image(150, 100, 'desk');
+    // --- Рабочий стол с компьютером ---
+    const desk = this.physics.add.staticImage(200, 150, 'computer_desk');
+    // Настраиваем хитбокс: 96x48 (весь стол), но можно сделать меньше (только нижняя часть)
+    desk.body.setSize(96, 32).setOffset(0, 16); 
 
-    // --- Ящики ---
-    this.add.image(700, 100, 'box');
-    this.add.image(700, 132, 'box');
-    this.add.image(668, 100, 'box');
+    // --- Кровать ---
+    const bed = this.physics.add.staticImage(700, 150, 'bed');
+    bed.body.setSize(64, 96).setOffset(0, 0);
+
+    // --- Шкаф ---
+    const wardrobe = this.physics.add.staticImage(100, 400, 'wardrobe');
+    wardrobe.body.setSize(48, 96).setOffset(0, 0);
+
+    // ==========================================
+    // 4. ИГРОК И NPC
+    // ==========================================
 
     // --- Игрок ---
-    // Синий квадрат (пока), но теперь на фоне комнаты
-    const player = this.add.rectangle(400, 300, 24, 24, 0x0000FF);
+    // Вместо квадрата используем круг для разнообразия
+    const player = this.add.circle(400, 500, 12, 0x0000FF);
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
 
     // --- NPC (Астартес) ---
-    // Фиолетовый квадрат
-    const npc = this.add.rectangle(600, 200, 24, 24, 0xa855f7);
+    const npc = this.add.rectangle(400, 200, 24, 24, 0xa855f7);
     this.physics.add.existing(npc);
     npc.body.setImmovable(true);
     npc.body.allowGravity = false;
 
     // Текст над NPC
-    this.add.text(600, 160, 'Астартес', { 
+    this.add.text(400, 160, 'Астартес', { 
         fontSize: '16px', 
         fill: '#a855f7', 
         fontFamily: 'Courier New' 
     }).setOrigin(0.5);
 
-    // --- Управление ---
+    // ==========================================
+    // 5. КОЛЛИЗИИ
+    // ==========================================
+    this.physics.add.collider(player, desk);
+    this.physics.add.collider(player, bed);
+    this.physics.add.collider(player, wardrobe);
+    this.physics.add.collider(player, npc);
+
+    // ==========================================
+    // 6. УПРАВЛЕНИЕ И ДИАЛОГИ
+    // ==========================================
+
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys('W,A,S,D,E');
 
@@ -139,18 +160,13 @@ function create() {
     this.dialogElement.id = 'dialog-overlay';
     this.dialogElement.style.display = 'none';
     
-    // Портрет игрока и NPC
     this.dialogElement.innerHTML = `
-        <div style="display: flex; gap: 10px;">
-            <div class="dialog-portrait" style="background-color: #0000FF;">👤</div>
-            <div class="dialog-portrait" style="background-color: #a855f7;">👤</div>
-        </div>
+        <div class="dialog-portrait" style="background-color: #a855f7;">👤</div>
         <div class="dialog-text" id="dialog-text">Текст диалога...</div>
     `;
     
     document.getElementById('game-container').appendChild(this.dialogElement);
 
-    // Сохраняем ссылки
     this.player = player;
     this.npc = npc;
 
@@ -167,15 +183,14 @@ function create() {
             this.dialogOpen = true;
             this.dialogElement.style.display = 'flex';
             document.getElementById('dialog-text').innerHTML = `
-                > Астартес: 'Ты чувствуешь это? Шёпот Чада в твоей голове...<br>
-                Он направляет тебя. Да будет мрак.'<br><br>
+                > Астартес: 'Ты видишь этот компьютер? В нем хранится часть кода Чада...<br>
+                Но не все двери открыты для тебя. Да будет мрак.'<br><br>
                 <span style='color:#666'>[E] Закрыть</span>
             `;
         }
     });
 }
 
-// === 3. UPDATE ===
 function update() {
     const speed = 160;
 
