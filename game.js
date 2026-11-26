@@ -80,8 +80,15 @@ function create() {
 function update() {
     const speed = 160;
 
+    // Если диалог открыт, игрок не двигается, но мы всё равно проверяем кнопку E
     if (this.dialogOpen) {
         this.player.body.setVelocity(0);
+        
+        // Проверяем, нажата ли E для закрытия
+        if (Phaser.Input.Keyboard.JustDown(this.keys.E)) {
+            this.dialogOpen = false;
+            this.dialogElement.style.display = 'none';
+        }
         return;
     }
 
@@ -102,22 +109,17 @@ function update() {
         this.player.body.setVelocityY(0);
     }
 
-    // Взаимодействие (E)
+    // Взаимодействие (E) — только если диалог закрыт
     if (Phaser.Input.Keyboard.JustDown(this.keys.E)) {
-        if (this.dialogOpen) {
-            this.dialogOpen = false;
-            this.dialogElement.style.display = 'none';
-        } else {
-            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.npc.x, this.npc.y);
-            if (dist < 60) {
-                this.dialogOpen = true;
-                this.dialogElement.style.display = 'flex';
-                document.getElementById('dialog-text').innerHTML = `
-                    > Астартес: 'Ты чувствуешь это? Шёпот Чада в твоей голове...<br>
-                    Он направляет тебя. Да будет мрак.'<br><br>
-                    <span style='color:#666'>[E] Закрыть</span>
-                `;
-            }
+        const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.npc.x, this.npc.y);
+        if (dist < 60) {
+            this.dialogOpen = true;
+            this.dialogElement.style.display = 'flex';
+            document.getElementById('dialog-text').innerHTML = `
+                > Астартес: 'Ты чувствуешь это? Шёпот Чада в твоей голове...<br>
+                Он направляет тебя. Да будет мрак.'<br><br>
+                <span style='color:#666'>[E] Закрыть</span>
+            `;
         }
     }
 }
