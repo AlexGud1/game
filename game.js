@@ -92,7 +92,7 @@ function create() {
     // --- Стол с компьютером (ВДОЛЬ ЛЕВОЙ СТЕНЫ) ---
     // Ширина стола 48 (половина = 24), значит x = 24 (прижат к левой стене)
     // Высота 96 (половина = 48), y = 100 (чуть ниже верхнего угла, чтобы не мешать кровати)
-    const desk = this.physics.add.staticImage(24, 52, 'computer_desk');
+    const desk = this.physics.add.staticImage(24, 48, 'computer_desk');
     desk.body.setSize(48, 96).setOffset(0, 0);
 
     // --- Кровать (ПРАВЫЙ ВЕРХНИЙ УГОЛ) ---
