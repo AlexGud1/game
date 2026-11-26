@@ -1,14 +1,358 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RENEZIA // Симуляция "Пролог"</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+<meta charset="UTF-8">
+<title>RPG Прототип — Комната</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #ffffff;
+    color: #000000;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+  #game-wrapper {
+    position: relative;
+    width: 640px;
+    height: 480px;
+    background: #ffffff;
+  }
+  canvas {
+    display: block;
+    width: 640px;
+    height: 480px;
+    image-rendering: pixelated;
+  }
+  /* Окно диалога в стиле RPG Maker / Hello Charlotte */
+  #dialogue-box {
+    display: none;
+    position: absolute;
+    bottom: 14px;
+    left: 20px;
+    right: 20px;
+    height: 125px;
+    background: #000000;
+    border: 2px solid #ffffff;
+    outline: 2px solid #000000;
+    color: #ffffff;
+    padding: 12px;
+    gap: 14px;
+    z-index: 10;
+  }
+  #portrait {
+    width: 96px;
+    height: 96px;
+    border: 1px solid #ffffff;
+    background: #111;
+    flex-shrink: 0;
+  }
+  #dialogue-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-grow: 1;
+  }
+  #speaker-name {
+    font-weight: bold;
+    font-size: 14px;
+    color: #ffea00;
+    margin-bottom: 4px;
+  }
+  #dialogue-text {
+    font-size: 14px;
+    line-height: 1.35;
+  }
+  #choices {
+    display: flex;
+    gap: 16px;
+    margin-top: 6px;
+  }
+  .choice-btn {
+    background: #000;
+    color: #fff;
+    border: 1px solid #fff;
+    padding: 3px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .choice-btn.active, .choice-btn:hover {
+    background: #fff;
+    color: #000;
+    font-weight: bold;
+  }
+  #hud {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #333;
+    display: flex;
+    gap: 20px;
+  }
+</style>
 </head>
 <body>
-    <div id="game-container"></div>
-    <script src="game.js"></script>
-</body>
-</html>
+
+<div id="game-wrapper">
+  <canvas id="game" width="640" height="480"></canvas>
+
+  <div id="dialogue-box">
+    <canvas id="portrait" width="96" height="96"></canvas>
+    <div id="dialogue-content">
+      <div>
+        <div id="speaker-name">ШАРЛОТТА</div>
+        <div id="dialogue-text"></div>
+      </div>
+      <div id="choices"></div>
+    </div>
+  </div>
+</div>
+
+<div id="hud">
+  <span>Управление: <b>WASD / Стрелки</b> — ходить, <b>E / Enter / Пробел</b> — осмотреть</span>
+  <span id="inv-text">Инвентарь: пусто</span>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+// Геометрия комнаты (как на референсе)
+const ROOM = { x: 130, y: 70, w: 380, h: 320, wallH: 85 };
+const HALL = { x: 85, y: 215, w: 45, h: 55 };
+
+// Состояние игры
+const state = {
+  hasKey: false,
+  inDialogue: false,
+  currentText: '',
+  shownText: '',
+  charIndex: 0,
+  choices: [],
+  selectedChoice: 0,
+  onChoiceSelect: null
+};
+
+// Игрок
+const player = {
+  x: 235,
+  y: 235,
+  w: 26,
+  h: 34,
+  speed: 2.6,
+  dir: 'down',
+  walkFrame: 0
+};
+
+// Твёрдые препятствия (коллизии)
+const colliders = [
+  { x: 130, y: 155, w: 85, h: 42 },  // Шкаф и комод слева
+  { x: 400, y: 155, w: 44, h: 72 },  // Кровать
+  { x: 450, y: 155, w: 32, h: 28 },  // Тумбочка
+  { x: 225, y: 342, w: 38, h: 38 },  // Синий ящик
+  { x: 268, y: 342, w: 38, h: 38 },  // Зелёный ящик
+  { x: 372, y: 342, w: 38, h: 38 }   // Жёлтый ящик
+];
+
+// Интерактивные зоны (осмотр на E / Enter)
+const interactables = [
+  {
+    id: 'board', x: 220, y: 150, w: 175, h: 16,
+    action: () => showDialogue('ШАРЛОТТА', 'Стена завешана вырезками и жёлтыми стикерами. Красные нити связывают имена, которые я не помню.')
+  },
+  {
+    id: 'bookshelf', x: 130, y: 155, w: 85, h: 50,
+    action: () => showDialogue('ШАРЛОТТА', 'Старые тетради и пустые коробки. На корешке одной написано: «Не открывать до конца».')
+  },
+  {
+    id: 'bed', x: 400, y: 155, w: 44, h: 78,
+    action: () => showDialogue('ШАРЛОТТА', 'Кровать аккуратно заправлена. Кажется, на ней давно никто не спал.')
+  },
+  {
+    id: 'blue_box', x: 222, y: 336, w: 44, h: 46,
+    action: () => {
+      if (!state.hasKey) {
+        showDialogue('СИНИЙ ЯЩИК', 'Внутри лежит маленький ржавый ключ. Взять его?', [
+          { label: 'Взять ключ', cb: () => {
+            state.hasKey = true;
+            document.getElementById('inv-text').innerHTML = 'Инвентарь: <b>[Ржавый ключ]</b>';
+            showDialogue('ШАРЛОТТА', 'Ключ теперь у меня. Возможно, он подойдёт к выходу слева.');
+          }},
+          { label: 'Оставить', cb: closeDialogue }
+        ]);
+      } else {
+        showDialogue('СИНИЙ ЯЩИК', 'Внутри больше ничего нет.');
+      }
+    }
+  },
+  {
+    id: 'green_box', x: 266, y: 336, w: 44, h: 46,
+    action: () => showDialogue('ЗЕЛЁНЫЙ ЯЩИК', 'Забит смятыми рисунками чьих-то глаз.')
+  },
+  {
+    id: 'yellow_box', x: 370, y: 336, w: 44, h: 46,
+    action: () => showDialogue('ЖЁЛТЫЙ ЯЩИК', 'Ящик тёплый на ощупь, но крышка намертво приклеена.')
+  },
+  {
+    id: 'papers', x: 425, y: 335, w: 45, h: 35,
+    action: () => showDialogue('ЗАПИСКА НА ПОЛУ', '«Если выйдешь за порог комнаты — обратного пути уже не будет».')
+  },
+  {
+    id: 'exit', x: 85, y: 215, w: 18, h: 55,
+    action: () => {
+      if (state.hasKey) {
+        showDialogue('ВЫХОД', 'Использовать ржавый ключ и шагнуть в белую пустоту?', [
+          { label: 'Выйти', cb: () => showDialogue('СИСТЕМА', 'КОНЕЦ ДЕМО-СЦЕНЫ. Здесь можно загрузить следующую комнату!') },
+          { label: 'Остаться', cb: closeDialogue }
+        ]);
+      } else {
+        showDialogue('ШАРЛОТТА', 'Проход перекрыт невидимым барьером. Нужно поискать ключ в ящиках.');
+      }
+    }
+  }
+];
+
+// Управление клавишами
+const keys = {};
+window.addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+
+  if (state.inDialogue) {
+    if (state.choices.length > 0) {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+        state.selectedChoice = (state.selectedChoice + state.choices.length - 1) % state.choices.length;
+        renderChoices();
+      } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        state.selectedChoice = (state.selectedChoice + 1) % state.choices.length;
+        renderChoices();
+      }
+    }
+    if (e.code === 'KeyE' || e.code === 'Enter' || e.code === 'Space') {
+      e.preventDefault();
+      if (state.charIndex < state.currentText.length) {
+        state.charIndex = state.currentText.length;
+        document.getElementById('dialogue-text').textContent = state.currentText;
+        renderChoices();
+      } else if (state.choices.length > 0) {
+        const chosen = state.choices[state.selectedChoice];
+        if (chosen && chosen.cb) chosen.cb();
+      } else {
+        closeDialogue();
+      }
+    }
+    return;
+  }
+
+  if (e.code === 'KeyE' || e.code === 'Enter' || e.code === 'Space') {
+    e.preventDefault();
+    checkInteraction();
+  }
+});
+
+window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+// Система диалогов
+function showDialogue(speaker, text, choices = []) {
+  state.inDialogue = true;
+  state.currentText = text;
+  state.charIndex = 0;
+  state.choices = choices;
+  state.selectedChoice = 0;
+
+  document.getElementById('speaker-name').textContent = speaker;
+  document.getElementById('dialogue-text').textContent = '';
+  document.getElementById('choices').innerHTML = '';
+  document.getElementById('dialogue-box').style.display = 'flex';
+  drawPortrait();
+}
+
+function renderChoices() {
+  const container = document.getElementById('choices');
+  container.innerHTML = '';
+  if (state.charIndex < state.currentText.length) return;
+  state.choices.forEach((c, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn' + (idx === state.selectedChoice ? ' active' : '');
+    btn.textContent = (idx === state.selectedChoice ? '▶ ' : '') + c.label;
+    btn.onclick = () => c.cb();
+    container.appendChild(btn);
+  });
+}
+
+function closeDialogue() {
+  state.inDialogue = false;
+  document.getElementById('dialogue-box').style.display = 'none';
+}
+
+function checkInteraction() {
+  const reach = 14;
+  const box = {
+    x: player.x - reach,
+    y: player.y - reach,
+    w: player.w + reach * 2,
+    h: player.h + reach * 2
+  };
+  for (const obj of interactables) {
+    if (rectsOverlap(box, obj)) {
+      obj.action();
+      break;
+    }
+  }
+}
+
+function rectsOverlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function canMoveTo(nx, ny) {
+  const footBox = { x: nx + 4, y: ny + 18, w: player.w - 8, h: player.h - 18 };
+  const inMainRoom =
+    footBox.x >= ROOM.x + 2 &&
+    footBox.x + footBox.w <= ROOM.x + ROOM.w - 2 &&
+    footBox.y >= ROOM.y + ROOM.wallH &&
+    footBox.y + footBox.h <= ROOM.y + ROOM.h - 2;
+
+  const inHall =
+    footBox.x >= HALL.x + 2 &&
+    footBox.x + footBox.w <= ROOM.x + 10 &&
+    footBox.y >= HALL.y + 2 &&
+    footBox.y + footBox.h <= HALL.y + HALL.h - 2;
+
+  if (!inMainRoom && !inHall) return false;
+
+  for (const c of colliders) {
+    if (rectsOverlap(footBox, c)) return false;
+  }
+  return true;
+}
+
+function update() {
+  if (state.inDialogue) {
+    if (state.charIndex < state.currentText.length) {
+      state.charIndex += 1.5;
+      document.getElementById('dialogue-text').textContent = state.currentText.slice(0, Math.floor(state.charIndex));
+      if (state.charIndex >= state.currentText.length) renderChoices();
+    }
+    return;
+  }
+
+  let dx = 0, dy = 0;
+  if (keys['ArrowUp'] || keys['KeyW']) { dy -= player.speed; player.dir = 'up'; }
+  if (keys['ArrowDown'] || keys['KeyS']) { dy += player.speed; player.dir = 'down'; }
+  if (keys['ArrowLeft'] || keys['KeyA']) { dx -= player.speed; player.dir = 'left'; }
+  if (keys['ArrowRight'] || keys['KeyD']) { dx += player.speed; player.dir = 'right'; }
+
+  if (dx !== 0 || dy !== 0) {
+    if (canMoveTo(player.x + dx, player.y)) player.x += dx;
+    if (canMoveTo(player.x, player.y + dy)) player.y += dy;
+    player.walkFrame += 0.15;
+  } else {
+    player.walkFrame = 0;
+  }
+}
+
