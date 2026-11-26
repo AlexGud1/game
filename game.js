@@ -4,7 +4,7 @@ const config = {
     height: 600,
     parent: 'game-container',
     pixelArt: true,
-    backgroundColor: '#1a1a1a', // Темный фон за пределами комнаты
+    backgroundColor: '#1a1a1a',
     physics: {
         default: 'arcade',
         arcade: { gravity: { y: 0 }, debug: false }
@@ -19,7 +19,7 @@ const config = {
 const game = new Phaser.Game(config);
 
 function preload() {
-    // Ничего не загружаем
+    // Ничего не загружаем, всё генерируем кодом
 }
 
 function create() {
@@ -44,7 +44,7 @@ function create() {
     deskGfx.fillStyle(0x333333);
     deskGfx.fillRect(56, 4, 32, 32); // Монитор справа
     deskGfx.fillStyle(0x00ff00);
-    deskGfx.fillRect(60, 8, 24, 24);
+    deskGfx.fillRect(60, 8, 24, 24); // Зеленый экран
     deskGfx.generateTexture('computer_desk', 96, 48);
 
     // --- Кровать ---
@@ -52,7 +52,7 @@ function create() {
     bedGfx.fillStyle(0x333333);
     bedGfx.fillRect(0, 0, 64, 96);
     bedGfx.fillStyle(0x555555);
-    bedGfx.fillRect(8, 8, 48, 24);
+    bedGfx.fillRect(8, 8, 48, 24); // Подушка
     bedGfx.generateTexture('bed', 64, 96);
 
     // --- Шкаф ---
@@ -68,7 +68,7 @@ function create() {
     // ==========================================
     
     const roomWidth = 25; // 25 * 32 = 800
-    const roomHeight = 19; // 19 * 32 = 608 (чуть больше 600)
+    const roomHeight = 19; // 19 * 32 = 608
 
     // --- Пол ---
     for (let x = 0; x < roomWidth; x++) {
@@ -77,32 +77,31 @@ function create() {
         }
     }
 
-    // --- Невидимые границы ---
+    // --- Невидимые границы (стены) ---
     const walls = this.physics.add.staticGroup();
-    walls.create(roomWidth * 32 / 2, 0, null).setSize(roomWidth * 32, 32).setVisible(false);
-    walls.create(roomWidth * 32 / 2, roomHeight * 32, null).setSize(roomWidth * 32, 32).setVisible(false);
-    walls.create(0, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false);
-    walls.create(roomWidth * 32, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false);
+    walls.create(roomWidth * 32 / 2, 0, null).setSize(roomWidth * 32, 32).setVisible(false); // Верх
+    walls.create(roomWidth * 32 / 2, roomHeight * 32, null).setSize(roomWidth * 32, 32).setVisible(false); // Низ
+    walls.create(0, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false); // Лево
+    walls.create(roomWidth * 32, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false); // Право
 
     // ==========================================
     // 3. ОБЪЕКТЫ (РАССТАНОВКА)
     // ==========================================
 
-    // --- Кровать (в левом верхнем углу, прижата к стенам) ---
-    // x = 32 (стена) + 32 (половина ширины кровати) = 64
-    // y = 32 (стена) + 48 (половина высоты кровати) = 80
-    const bed = this.physics.add.staticImage(64, 80, 'bed');
-    bed.body.setSize(64, 96).setOffset(0, 0);
-
-    // --- Рабочий стол (прижат к левой стене, ниже кровати) ---
-    // Монитор справа, значит, стол стоит слева, а экран смотрит вправо (к кровати).
+    // --- Стол с компьютером (ЛЕВЫЙ ВЕРХНИЙ УГОЛ) ---
     // x = 32 (стена) + 48 (половина ширины стола) = 80
-    // y = 200 (просто ниже кровати)
-    const desk = this.physics.add.staticImage(80, 250, 'computer_desk');
+    // y = 32 (стена) + 24 (половина высоты стола) = 56
+    const desk = this.physics.add.staticImage(80, 56, 'computer_desk');
     desk.body.setSize(96, 32).setOffset(0, 16);
 
-    // --- Шкаф (справа, для баланса) ---
-    const wardrobe = this.physics.add.staticImage(700, 300, 'wardrobe');
+    // --- Кровать (ПРАВЫЙ ВЕРХНИЙ УГОЛ) ---
+    // x = 800 (ширина комнаты) - 32 (стена) - 32 (половина ширины кровати) = 736
+    // y = 32 (стена) + 48 (половина высоты кровати) = 80
+    const bed = this.physics.add.staticImage(736, 80, 'bed');
+    bed.body.setSize(64, 96).setOffset(0, 0);
+
+    // --- Шкаф (где-нибудь внизу, для баланса) ---
+    const wardrobe = this.physics.add.staticImage(400, 500, 'wardrobe');
     wardrobe.body.setSize(48, 96).setOffset(0, 0);
 
     // ==========================================
@@ -110,18 +109,19 @@ function create() {
     // ==========================================
 
     // --- Игрок ---
-    const player = this.add.circle(400, 400, 12, 0x0000FF);
+    const player = this.add.circle(400, 300, 12, 0x0000FF);
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
 
     // --- NPC (Астартес) ---
-    const npc = this.add.rectangle(500, 300, 24, 24, 0xa855f7);
+    // Поставим его посередине комнаты
+    const npc = this.add.rectangle(400, 200, 24, 24, 0xa855f7);
     this.physics.add.existing(npc);
     npc.body.setImmovable(true);
     npc.body.allowGravity = false;
 
     // Текст над NPC
-    this.add.text(500, 260, 'Астартес', { 
+    this.add.text(400, 160, 'Астартес', { 
         fontSize: '16px', 
         fill: '#a855f7', 
         fontFamily: 'Courier New' 
@@ -137,12 +137,11 @@ function create() {
     this.physics.add.collider(player, npc);
 
     // ==========================================
-    // 6. КАМЕРА (СТАТИЧНАЯ, НА ВЕСЬ ЭКРАН)
+    // 6. КАМЕРА (СТАТИЧНАЯ)
     // ==========================================
     
     this.physics.world.setBounds(0, 0, roomWidth * 32, roomHeight * 32);
     this.cameras.main.setBounds(0, 0, roomWidth * 32, roomHeight * 32);
-    // Центрируем камеру
     this.cameras.main.centerOn(roomWidth * 32 / 2, roomHeight * 32 / 2);
 
     // ==========================================
