@@ -7,7 +7,7 @@ const config = {
     backgroundColor: '#1a1a1a',
     physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 0 }, debug: false } // Включите true, чтобы увидеть хитбоксы
+        arcade: { gravity: { y: 0 }, debug: false }
     },
     scene: {
         preload: preload,
@@ -19,7 +19,7 @@ const config = {
 const game = new Phaser.Game(config);
 
 function preload() {
-    // Пока ничего не грузим, все рисуем кодом
+    // Ничего не загружаем, всё генерируем в create
 }
 
 function create() {
@@ -45,11 +45,10 @@ function create() {
 
     // --- Рабочий стол с компьютером ---
     const deskGfx = this.make.graphics({ x: 0, y: 0, add: false });
-    deskGfx.fillStyle(0x222222); // Темный стол
+    deskGfx.fillStyle(0x222222);
     deskGfx.fillRect(0, 0, 96, 48);
     deskGfx.lineStyle(2, 0x000000);
     deskGfx.strokeRect(0, 0, 96, 48);
-    // Монитор
     deskGfx.fillStyle(0x333333);
     deskGfx.fillRect(16, 4, 64, 32);
     deskGfx.fillStyle(0x00ff00); // Зеленый экран
@@ -60,7 +59,7 @@ function create() {
     const bedGfx = this.make.graphics({ x: 0, y: 0, add: false });
     bedGfx.fillStyle(0x333333);
     bedGfx.fillRect(0, 0, 64, 96);
-    bedGfx.fillStyle(0x555555); // Подушка
+    bedGfx.fillStyle(0x555555);
     bedGfx.fillRect(8, 8, 48, 24);
     bedGfx.generateTexture('bed', 64, 96);
 
@@ -73,30 +72,36 @@ function create() {
     wardrobeGfx.generateTexture('wardrobe', 48, 96);
 
     // ==========================================
-    // 2. ПОСТРОЕНИЕ КОМНАТЫ
+    // 2. ПОСТРОЕНИЕ КОМНАТЫ (УМЕНЬШЕННОЙ)
     // ==========================================
+    
+    // Размеры комнаты (в тайлах)
+    const roomWidth = 15; // 15 * 32 = 480px
+    const roomHeight = 11; // 11 * 32 = 352px
 
-    // --- Пол (фон) ---
-    for (let x = 0; x < 25; x++) {
-        for (let y = 0; y < 19; y++) {
+    // --- Пол ---
+    for (let x = 0; x < roomWidth; x++) {
+        for (let y = 0; y < roomHeight; y++) {
             this.add.image(x * 32 + 16, y * 32 + 16, 'floor');
         }
     }
 
-    // --- Стены (границы комнаты) ---
-    // Верхняя стена
-    for (let x = 0; x < 25; x++) {
+    // --- Стены ---
+    // Верх
+    for (let x = 0; x < roomWidth; x++) {
         this.add.image(x * 32 + 16, 16, 'wall');
     }
-    // Левая стена (с проходом)
-    for (let y = 1; y < 18; y++) {
-        if (y !== 12) { // Проход внизу
-            this.add.image(16, y * 32 + 16, 'wall');
-        }
+    // Низ
+    for (let x = 0; x < roomWidth; x++) {
+        this.add.image(x * 32 + 16, roomHeight * 32 - 16, 'wall');
     }
-    // Правая стена
-    for (let y = 1; y < 18; y++) {
-        this.add.image(25 * 32 - 16, y * 32 + 16, 'wall');
+    // Лево
+    for (let y = 1; y < roomHeight - 1; y++) {
+        this.add.image(16, y * 32 + 16, 'wall');
+    }
+    // Право
+    for (let y = 1; y < roomHeight - 1; y++) {
+        this.add.image(roomWidth * 32 - 16, y * 32 + 16, 'wall');
     }
 
     // ==========================================
@@ -104,16 +109,15 @@ function create() {
     // ==========================================
 
     // --- Рабочий стол с компьютером ---
-    const desk = this.physics.add.staticImage(200, 150, 'computer_desk');
-    // Настраиваем хитбокс: 96x48 (весь стол), но можно сделать меньше (только нижняя часть)
+    const desk = this.physics.add.staticImage(150, 100, 'computer_desk');
     desk.body.setSize(96, 32).setOffset(0, 16); 
 
     // --- Кровать ---
-    const bed = this.physics.add.staticImage(700, 150, 'bed');
+    const bed = this.physics.add.staticImage(380, 150, 'bed');
     bed.body.setSize(64, 96).setOffset(0, 0);
 
     // --- Шкаф ---
-    const wardrobe = this.physics.add.staticImage(100, 400, 'wardrobe');
+    const wardrobe = this.physics.add.staticImage(70, 250, 'wardrobe');
     wardrobe.body.setSize(48, 96).setOffset(0, 0);
 
     // ==========================================
@@ -121,19 +125,18 @@ function create() {
     // ==========================================
 
     // --- Игрок ---
-    // Вместо квадрата используем круг для разнообразия
-    const player = this.add.circle(400, 500, 12, 0x0000FF);
+    const player = this.add.circle(240, 300, 12, 0x0000FF);
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
 
     // --- NPC (Астартес) ---
-    const npc = this.add.rectangle(400, 200, 24, 24, 0xa855f7);
+    const npc = this.add.rectangle(300, 180, 24, 24, 0xa855f7);
     this.physics.add.existing(npc);
     npc.body.setImmovable(true);
     npc.body.allowGravity = false;
 
     // Текст над NPC
-    this.add.text(400, 160, 'Астартес', { 
+    this.add.text(300, 140, 'Астартес', { 
         fontSize: '16px', 
         fill: '#a855f7', 
         fontFamily: 'Courier New' 
@@ -148,13 +151,28 @@ function create() {
     this.physics.add.collider(player, npc);
 
     // ==========================================
-    // 6. УПРАВЛЕНИЕ И ДИАЛОГИ
+    // 6. КАМЕРА (ФОКУС НА ИГРОКЕ)
+    // ==========================================
+    
+    // Устанавливаем границы мира (чтобы камера не уходила за края комнаты)
+    this.physics.world.setBounds(0, 0, roomWidth * 32, roomHeight * 32);
+    
+    // Камера следит за игроком с плавностью
+    this.cameras.main.startFollow(player, true, 0.1, 0.1);
+    
+    // Увеличиваем масштаб (zoom), чтобы комната казалась больше
+    this.cameras.main.setZoom(1.8); 
+    
+    // Ограничиваем камеру границами комнаты
+    this.cameras.main.setBounds(0, 0, roomWidth * 32, roomHeight * 32);
+
+    // ==========================================
+    // 7. УПРАВЛЕНИЕ И ДИАЛОГИ
     // ==========================================
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys('W,A,S,D,E');
 
-    // --- Диалоговое окно ---
     this.dialogOpen = false;
     this.dialogElement = document.createElement('div');
     this.dialogElement.id = 'dialog-overlay';
@@ -170,7 +188,6 @@ function create() {
     this.player = player;
     this.npc = npc;
 
-    // --- Обработка нажатия E ---
     this.input.keyboard.on('keydown-E', () => {
         if (this.dialogOpen) {
             this.dialogOpen = false;
