@@ -27,6 +27,18 @@ const ROOM_HEIGHT = 500;
 const PLAYER_SIZE = 32;
 const MOVE_SPEED = 3;
 
+
+// === НАСТРОЙКИ КАРТИНОК ===
+// Положите ваши изображения в папку public/images/
+// Если файла нет — будет использован CSS-стиль по умолчанию
+
+const DIALOGUE_IMAGES = {
+  // Фон диалогового окна (полоска внизу экрана)
+  dialogueBg: '/images/dialogue-bg.png',
+  // Портрет персонажа (отображается слева от текста)
+  characterPortrait: '/images/char-astra.png',
+};
+
 // Диалоги
 const BED_DIALOGUE: DialogueLine[][] = [
   [
@@ -349,25 +361,43 @@ export default function App() {
         {isDialogueOpen && currentDialogue && (
           <div className="dialogue-overlay">
             <div className="dialogue-box">
+              {/* Фоновая картинка диалогового окна (если есть) */}
+              <img
+                src={DIALOGUE_IMAGES.dialogueBg}
+                alt=""
+                className="dialogue-bg-image"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
               <div className="dialogue-box-inner">
-                <div className="dialogue-speaker">
-                  {currentDialogue[currentLine].speaker}
+                {/* Портрет персонажа (если есть) */}
+                <div className="dialogue-portrait-container">
+                  <img
+                    src={DIALOGUE_IMAGES.characterPortrait}
+                    alt="Астра"
+                    className="dialogue-portrait"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  <div className="dialogue-portrait-fallback">ア</div>
                 </div>
-                <div className="dialogue-text">
-                  {displayText}
-                  {isTyping && <span className="typing-cursor">▌</span>}
-                </div>
-                <div className="dialogue-continue">
-                  {!isTyping && (
-                    <span className="continue-arrow">
-                      {currentLine < currentDialogue.length - 1
-                        ? '▼ Далее'
-                        : (nearObject && (interactedObjects[nearObject.id] || 0) + 1 < nearObject.dialogues.length)
-                          ? '▼ Продолжить'
-                          : '▼ Закрыть'}
-                    </span>
-                  )}
-                </div>
+                <div className="dialogue-content">
+                  <div className="dialogue-speaker">
+                    {currentDialogue[currentLine].speaker}
+                  </div>
+                  <div className="dialogue-text">
+                    {displayText}
+                    {isTyping && <span className="typing-cursor">▌</span>}
+                  </div>
+                  <div className="dialogue-continue">
+                    {!isTyping && (
+                      <span className="continue-arrow">
+                        {currentLine < currentDialogue.length - 1
+                          ? '▼ Далее'
+                          : (nearObject && (interactedObjects[nearObject.id] || 0) + 1 < nearObject.dialogues.length)
+                            ? '▼ Продолжить'
+                            : '▼ Закрыть'}
+                      </span>
+                    )}
+                  </div>
               </div>
               <div className="dialogue-decoration-left"></div>
               <div className="dialogue-decoration-right"></div>

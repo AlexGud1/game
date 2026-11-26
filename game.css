@@ -478,15 +478,71 @@ body {
   pointer-events: all;
 }
 
+/* Фоновая картинка диалогового окна */
+.dialogue-bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  border-radius: 4px;
+  z-index: 0;
+  image-rendering: auto;
+}
+
+/* Портрет персонажа */
+.dialogue-portrait-container {
+  position: absolute;
+  left: -60px;
+  bottom: 0;
+  width: 120px;
+  height: 140px;
+  z-index: 2;
+}
+
+.dialogue-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+  filter: drop-shadow(0 0 10px rgba(100, 60, 150, 0.5));
+}
+
+.dialogue-portrait-fallback {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #2a1a3a 0%, #1a0a2a 100%);
+  border: 2px solid #6a4a8a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b090d0;
+  font-size: 32px;
+  text-shadow: 0 0 10px rgba(150, 100, 200, 0.5);
+}
+
 .dialogue-box-inner {
   background: linear-gradient(180deg, rgba(15, 10, 25, 0.95) 0%, rgba(20, 15, 35, 0.98) 100%);
   border: 2px solid #6a4a8a;
   border-radius: 4px;
   padding: 16px 20px;
+  padding-left: 80px;
   position: relative;
   box-shadow:
     0 0 20px rgba(100, 60, 150, 0.3),
     inset 0 0 30px rgba(0, 0, 0, 0.5);
+  min-height: 120px;
+}
+
+.dialogue-content {
+  position: relative;
+  z-index: 1;
 }
 
 .dialogue-box-inner::before {
