@@ -27,7 +27,7 @@ function create() {
     // 1. ГЕНЕРАЦИЯ ТЕКСТУР
     // ==========================================
     
-    // --- Пол (темный паркет) ---
+    // --- Пол ---
     const floorGfx = this.make.graphics({ x: 0, y: 0, add: false });
     floorGfx.fillStyle(0x151515);
     floorGfx.fillRect(0, 0, 32, 32);
@@ -35,16 +35,15 @@ function create() {
     floorGfx.lineBetween(0, 16, 32, 16);
     floorGfx.generateTexture('floor', 32, 32);
 
-    // --- Рабочий стол с компьютером (ВЕРТИКАЛЬНЫЙ, монитор сверху) ---
+    // --- Стол с компьютером (ВЕРТИКАЛЬНЫЙ, монитор сверху) ---
     const deskGfx = this.make.graphics({ x: 0, y: 0, add: false });
     deskGfx.fillStyle(0x222222);
-    deskGfx.fillRect(0, 0, 48, 96); // Ширина 48, высота 96
+    deskGfx.fillRect(0, 0, 48, 96);
     deskGfx.lineStyle(2, 0x000000);
     deskGfx.strokeRect(0, 0, 48, 96);
-    // Монитор сверху
     deskGfx.fillStyle(0x333333);
     deskGfx.fillRect(8, 8, 32, 32);
-    deskGfx.fillStyle(0x00ff00); // Зеленый экран
+    deskGfx.fillStyle(0x00ff00);
     deskGfx.fillRect(12, 12, 24, 24);
     deskGfx.generateTexture('computer_desk', 48, 96);
 
@@ -53,23 +52,33 @@ function create() {
     bedGfx.fillStyle(0x333333);
     bedGfx.fillRect(0, 0, 64, 96);
     bedGfx.fillStyle(0x555555);
-    bedGfx.fillRect(8, 8, 48, 24); // Подушка
+    bedGfx.fillRect(8, 8, 48, 24);
     bedGfx.generateTexture('bed', 64, 96);
 
     // --- Шкаф ---
     const wardrobeGfx = this.make.graphics({ x: 0, y: 0, add: false });
     wardrobeGfx.fillStyle(0x2a2a2a);
-    wardrobeGfx.fillRect(0, 0, 96, 48);
+    wardrobeGfx.fillRect(0, 0, 48, 96);
     wardrobeGfx.lineStyle(2, 0x000000);
     wardrobeGfx.strokeRect(4, 4, 40, 88);
-    wardrobeGfx.generateTexture('wardrobe', 96, 48);
+    wardrobeGfx.generateTexture('wardrobe', 48, 96);
+
+    // --- Дверь (визуальная) ---
+    const doorGfx = this.make.graphics({ x: 0, y: 0, add: false });
+    doorGfx.fillStyle(0x4a2a1a); // Коричневая дверь
+    doorGfx.fillRect(0, 0, 32, 64);
+    doorGfx.lineStyle(2, 0x000000);
+    doorGfx.strokeRect(0, 0, 32, 64);
+    doorGfx.fillStyle(0xffff00); // Ручка
+    doorGfx.fillRect(24, 32, 4, 4);
+    doorGfx.generateTexture('door', 32, 64);
 
     // ==========================================
-    // 2. ПОСТРОЕНИЕ КОМНАТЫ (МАЛЕНЬКОЙ)
+    // 2. ПОСТРОЕНИЕ КОМНАТЫ
     // ==========================================
     
-    const roomWidth = 12; // 12 * 32 = 384px
-    const roomHeight = 9;  // 9 * 32 = 288px
+    const roomWidth = 12; // 384
+    const roomHeight = 9;  // 288
 
     // --- Пол ---
     for (let x = 0; x < roomWidth; x++) {
@@ -78,52 +87,56 @@ function create() {
         }
     }
 
-    // --- Невидимые границы (стены) ---
+    // --- НЕВИДИМЫЕ СТЕНЫ (с проходом для двери) ---
     const walls = this.physics.add.staticGroup();
-    walls.create(roomWidth * 32 / 2, 0, null).setSize(roomWidth * 32, 32).setVisible(false); // Верх
-    walls.create(roomWidth * 32 / 2, roomHeight * 32, null).setSize(roomWidth * 32, 32).setVisible(false); // Низ
-    walls.create(0, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false); // Лево
-    walls.create(roomWidth * 32, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false); // Право
+    
+    // Верхняя стена (сплошная)
+    walls.create(roomWidth * 32 / 2, 0, null).setSize(roomWidth * 32, 32).setVisible(false);
+    // Нижняя стена (сплошная)
+    walls.create(roomWidth * 32 / 2, roomHeight * 32, null).setSize(roomWidth * 32, 32).setVisible(false);
+    // Правая стена (сплошная)
+    walls.create(roomWidth * 32, roomHeight * 32 / 2, null).setSize(32, roomHeight * 32).setVisible(false);
+    
+    // ЛЕВАЯ СТЕНА (разделена на две части, чтобы оставить проход)
+    // Верхняя часть (от 0 до 150)
+    walls.create(0, 75, null).setSize(32, 150).setVisible(false);
+    // Нижняя часть (от 214 до 288)
+    walls.create(0, 251, null).setSize(32, 74).setVisible(false);
+    // Проход (между 150 и 214) — там будет дверь
 
     // ==========================================
-    // 3. ОБЪЕКТЫ (РАССТАНОВКА В УГОЛ)
+    // 3. ОБЪЕКТЫ
     // ==========================================
 
-    // --- Стол с компьютером (ВДОЛЬ ЛЕВОЙ СТЕНЫ) ---
-    // Ширина стола 48 (половина = 24), значит x = 24 (прижат к левой стене)
-    // Высота 96 (половина = 48), y = 100 (чуть ниже верхнего угла, чтобы не мешать кровати)
+    // --- Стол с компьютером (ВДОЛЬ ЛЕВОЙ СТЕНЫ, ВЫШЕ ДВЕРИ) ---
     const desk = this.physics.add.staticImage(24, 48, 'computer_desk');
     desk.body.setSize(48, 96).setOffset(0, 0);
 
+    // --- Дверь (ВИЗУАЛЬНО) ---
+    // Ставим её в проходе (y = 182 — центр прохода)
+    this.add.image(16, 182, 'door');
+
     // --- Кровать (ПРАВЫЙ ВЕРХНИЙ УГОЛ) ---
-    // Ширина кровати 64, половина = 32. 
-    // Ширина комнаты 384. Чтобы прижать к правой стене (x=384), центр должен быть на 384 - 32 = 352.
-    // Высота кровати 96, половина = 48. Центр по y = 48 (прижат к верхней стене).
     const bed = this.physics.add.staticImage(352, 48, 'bed');
     bed.body.setSize(64, 96).setOffset(0, 0);
 
     // --- Шкаф (Внизу по центру) ---
-    // Центр комнаты по x = 192. Высота комнаты 288, низ = 288. 
-    // Шкаф высотой 96, половина 48. Значит y = 288 - 48 = 240.
-    const wardrobe = this.physics.add.staticImage(240, 192, 'wardrobe');
-    wardrobe.body.setSize(96, 48).setOffset(0, 0);
+    const wardrobe = this.physics.add.staticImage(192, 240, 'wardrobe');
+    wardrobe.body.setSize(48, 96).setOffset(0, 0);
 
     // ==========================================
     // 4. ИГРОК И NPC
     // ==========================================
 
-    // --- Игрок ---
     const player = this.add.circle(192, 150, 12, 0x0000FF);
     this.physics.add.existing(player);
     player.body.setCollideWorldBounds(true);
 
-    // --- NPC (Астартес) ---
     const npc = this.add.rectangle(192, 100, 24, 24, 0xa855f7);
     this.physics.add.existing(npc);
     npc.body.setImmovable(true);
     npc.body.allowGravity = false;
 
-    // Текст над NPC
     this.add.text(192, 60, 'Астартес', { 
         fontSize: '16px', 
         fill: '#a855f7', 
@@ -140,21 +153,30 @@ function create() {
     this.physics.add.collider(player, npc);
 
     // ==========================================
-    // 6. КАМЕРА (СТАТИЧНАЯ + ЗУМ)
+    // 6. ЛОГИКА ПЕРЕХОДА (ТЕЛЕПОРТ)
     // ==========================================
+    // Создаем невидимую зону у двери
+    const doorZone = this.add.zone(16, 182, 32, 64);
+    this.physics.add.existing(doorZone, true);
     
-    // Ограничиваем мир размером комнаты
+    // Когда игрок касается зоны двери, телепортируем его
+    this.physics.add.overlap(player, doorZone, () => {
+        // В будущем здесь можно сделать переход на другую сцену.
+        // Пока просто телепортируем в правый нижний угол.
+        player.setPosition(350, 250);
+        // И показываем сообщение (опционально)
+        // this.dialogOpen = true; ... (но лучше сделать отдельную сцену)
+    });
+
+    // ==========================================
+    // 7. КАМЕРА
+    // ==========================================
     this.physics.world.setBounds(0, 0, roomWidth * 32, roomHeight * 32);
-    
-    // Ставим камеру так, чтобы она смотрела в центр комнаты
     this.cameras.main.centerOn(roomWidth * 32 / 2, roomHeight * 32 / 2);
-    
-    // Увеличиваем масштаб (zoom), чтобы комната заполнила экран
-    // 800 / 384 = 2.08. Ставим 2, чтобы было чуть с отступами.
     this.cameras.main.setZoom(2);
 
     // ==========================================
-    // 7. УПРАВЛЕНИЕ И ДИАЛОГИ
+    // 8. УПРАВЛЕНИЕ И ДИАЛОГИ
     // ==========================================
 
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -187,7 +209,7 @@ function create() {
             this.dialogOpen = true;
             this.dialogElement.style.display = 'flex';
             document.getElementById('dialog-text').innerHTML = `
-                > Астартес: 'Ты видишь этот компьютер? В нем хранится часть кода Чада...<br>
+                > Астартес: 'Ты видишь эту дверь? За ней начинается твой путь.<br>
                 Но не все двери открыты для тебя. Да будет мрак.'<br><br>
                 <span style='color:#666'>[E] Закрыть</span>
             `;
