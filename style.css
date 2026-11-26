@@ -1,0 +1,103 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #050505;
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)" opacity="0.05"/></svg>');
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#game-container {
+    width: 800px;
+    height: 600px;
+    border: 2px solid #4B0082;
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+    position: relative;
+    background-color: #000;
+}
+
+#game-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    image-rendering: pixelated;
+}
+
+/* === ОКНО ДИАЛОГА === */
+#dialogue-overlay {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.dialogue-box {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    background: rgba(10, 5, 15, 0.95);
+    border: 2px solid #a855f7;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+    pointer-events: auto;
+}
+
+#dialogue-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.2; /* Фон диалога делаем полупрозрачным */
+    z-index: 1;
+}
+
+.dialogue-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    padding: 15px;
+    height: 100%;
+    gap: 15px;
+}
+
+#dialogue-portrait {
+    width: 130px;
+    height: 130px;
+    object-fit: contain;
+    border: 1px solid #4B0082;
+    background-color: #000;
+}
+
+.dialogue-text-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#dialogue-speaker {
+    color: #a855f7;
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+#dialogue-text {
+    color: #d8b4fe;
+    font-size: 16px;
+    line-height: 1.5;
+}
