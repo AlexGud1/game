@@ -59,7 +59,7 @@ function create() {
     // --- Шкаф ---
     const wardrobeGfx = this.make.graphics({ x: 0, y: 0, add: false });
     wardrobeGfx.fillStyle(0x2a2a2a);
-    wardrobeGfx.fillRect(0, 0, 48, 96);
+    wardrobeGfx.fillRect(0, 0, 96, 48);
     wardrobeGfx.lineStyle(2, 0x000000);
     wardrobeGfx.strokeRect(4, 4, 40, 88);
     wardrobeGfx.generateTexture('wardrobe', 96, 48);
