@@ -62,7 +62,7 @@ function create() {
     wardrobeGfx.fillRect(0, 0, 48, 96);
     wardrobeGfx.lineStyle(2, 0x000000);
     wardrobeGfx.strokeRect(4, 4, 40, 88);
-    wardrobeGfx.generateTexture('wardrobe', 48, 96);
+    wardrobeGfx.generateTexture('wardrobe', 96, 48);
 
     // ==========================================
     // 2. ПОСТРОЕНИЕ КОМНАТЫ (МАЛЕНЬКОЙ)
@@ -105,8 +105,8 @@ function create() {
     // --- Шкаф (Внизу по центру) ---
     // Центр комнаты по x = 192. Высота комнаты 288, низ = 288. 
     // Шкаф высотой 96, половина 48. Значит y = 288 - 48 = 240.
-    const wardrobe = this.physics.add.staticImage(192, 240, 'wardrobe');
-    wardrobe.body.setSize(48, 96).setOffset(0, 0);
+    const wardrobe = this.physics.add.staticImage(240, 192, 'wardrobe');
+    wardrobe.body.setSize(96, 48).setOffset(0, 0);
 
     // ==========================================
     // 4. ИГРОК И NPC
